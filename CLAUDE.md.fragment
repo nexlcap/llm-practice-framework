@@ -1,7 +1,8 @@
 ## LLM usage rules (paste into the project's CLAUDE.md)
 
 These apply to every model call this project makes and to every agent session working on it. The
-full framework is in `docs/llm-practices/framework/` (or wherever this project keeps it).
+full framework is in `docs/llm-framework/` (or wherever this project keeps it). The same text works
+as an `AGENTS.md` section for other coding agents.
 
 **Design**
 - No model call exists without a call-site contract (`call-site-contract.md`). A blank consumer

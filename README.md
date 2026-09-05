@@ -27,7 +27,7 @@ agent working in the project).
 | `README.md` | This framework |
 | `call-site-contract.md` | Template to fill per model call |
 | `panel-protocol.md` | The review protocol, tool-agnostic |
-| `CLAUDE.md.fragment` | The rules as agent instructions |
+| `CLAUDE.md.fragment` | The rules as agent instructions; works verbatim as an `AGENTS.md` section for other coding agents |
 | `skills/expert-panel/SKILL.md` | The protocol as a Claude Code skill (same text plus execution steps; edit both together) |
 | `install.sh` | Installs the skill for every Claude Code project on this machine (`~/.claude/skills/expert-panel`) |
 | `adopt.sh <project>` | Copies the documents into `<project>/docs/llm-framework/` and appends the fragment to its `CLAUDE.md` once |
@@ -327,7 +327,7 @@ An afternoon, in this order:
 
 ## Provenance
 
-Extracted from the incident-level practices guide kept in a private project's repository at
-`docs/llm-practices/README.md` (with source extraction reports under `docs/llm-practices/sources/`),
-itself distilled from an earlier private project. The generic wording here deliberately drops the domain;
-where a rule seems arbitrary, the guide has the failure that produced it.
+Distilled from several months of running model-driven features in a live decision-support system:
+its code, its design specs, and the incident record kept alongside them. Every rule traces to a
+specific failure or a specific measurement. The generic wording here deliberately drops the domain
+and the incidents; where a rule seems arbitrary, assume it was paid for.
