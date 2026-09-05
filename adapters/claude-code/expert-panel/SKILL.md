@@ -107,9 +107,10 @@ Convene only the seats the change touches. Proportionality is part of the protoc
 - **Never role-play the panel inline.** The session that wrote the artifact cannot review it; with
   the artifact still in context every "reviewer" agrees with the author.
 - **Each reviewer's prompt contains:** the roles it embodies (by title); the artifact path, to be read
-  in full; the specific code files that matter; what to push on, named explicitly; the required
-  output shape (section 4); and an instruction to challenge rather than approve, with examples of the
-  kind of finding that would be valuable.
+  in full; the specific code files that matter; the build stage (what exists in code, what is design
+  only), so a planned control is not reviewed as a shipped one; what to push on, named explicitly;
+  the required output shape (section 4); and an instruction to challenge rather than approve, with
+  examples of the kind of finding that would be valuable.
 - **Say what to push on.** "Review this" produces approval. "Find the way this loses the user money in
   month three", "find the path where the guard is never called", "find the assumption the author
   made because they wrote the previous version" produce findings.
@@ -154,12 +155,18 @@ independent groups, unanimous approve, frame-inversion 1 modify".
 - Every finding is a hypothesis. The author re-verifies each one against the code or the data before
   adopting it, and records refuted findings with the evidence. Panels are independent, not infallible.
 - The consolidated verdict, the seats convened, and the links to each reviewer's report are recorded
-  with the artifact.
+  with the artifact. Copy the reports into the repository; scratch directories do not survive.
+- A blocked spec gate blocks the *build*, not the adoption: record the open blockers with the
+  artifact, fix what is small and code-verified now, and carry the rest to the next gate. Expect
+  the first gate on an existing codebase to find more than the design under review.
 
 ## 6. Reproducing load-bearing verdicts
 
-A single blocker, or a clean approve on something risky, is load-bearing. Re-dispatch the decisive
-pair (fresh session, same prompt) and require agreement across runs.
+A single blocker, or a clean approve on something risky, is load-bearing. First try to verify it
+directly: a finding that names a file and a line is checked against the code, and a verified finding
+needs no reproduction run. Reproduction is for judgment findings that cannot be checked that way.
+For those, re-dispatch the decisive pair (fresh session, same prompt) and require agreement across
+runs. Two independent lenses reaching the same blocker in one round also counts as reproduction.
 
 - A blocker that does not reproduce is demoted to modify-before-build.
 - An approve that does not reproduce means the concern is live; treat it as modify.

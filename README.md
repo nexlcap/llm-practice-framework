@@ -16,7 +16,8 @@ Four parts:
    evaluate, review, and the developer workflow. Each item is a yes/no question.
 4. **Adoption.** The short form is section 6 below, with a pull-request checklist and a maturity
    ladder to see where a project stands. The full step-by-step guide, including how to tailor the
-   panel to your domain and your tool, is `ADAPTING.md`.
+   panel to your domain and your tool, is `ADAPTING.md`. Budget an afternoon for installation and
+   the first contract, and another half day for the first panel gate and folding in what it finds.
 
 Companion files: `panel-protocol.md` (independent review) and `agent-rules.md` (the rules as
 instructions for whatever coding agent works in the project).
@@ -61,8 +62,8 @@ judgment before anything acts on it. Model output never feeds another model call
 
 **P3. Instructions are requests; guards are controls.** A rule the model "disobeyed" is not fixed by
 another sentence in the prompt. It is fixed by a structural guard: schema validation, a closed
-vocabulary, a precision-biased audit, a deterministic suppression layer, or by removing the model's
-ability to do the thing at all.
+vocabulary, an audit whose bias matches the cost of its errors, a deterministic suppression layer,
+or by removing the model's ability to do the thing at all.
 
 **P4. One door.** Every call goes through one client module with an allowlist of registered call
 sites. An unregistered caller raises. The transport never falls back silently; the call site decides

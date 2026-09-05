@@ -12,6 +12,11 @@ fencing; any tool a model can call without an allowlist; any write a model can c
 deterministic validation; any timeout that was guessed rather than measured; any path where a
 credentialed subprocess can be orphaned; any silent fallback to another model or route.
 
+## Build stage
+
+If the artifact does not state what exists in code versus what is design only, treat every
+control as unbuilt and say so; do not review a planned control as a shipped one.
+
 ## Output shape
 
 For each role: the independent assessment. Then the peer challenge: what each role disputes in the

@@ -13,3 +13,8 @@ evidence in the artifact would distinguish the two. A prompt or design that hand
 Verdict, exactly one of these words on its own line: BLOCKERS, MODIFY-BEFORE-BUILD, APPROVE-AS-IS.
 Under it, each finding as: what, where, why it matters, what would resolve it. An approve must list
 the failure scenarios you constructed and why each does not hold.
+
+## Build stage
+
+If the artifact does not state what exists in code versus what is design only, treat every
+control as unbuilt and say so.

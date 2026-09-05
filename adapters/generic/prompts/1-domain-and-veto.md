@@ -12,6 +12,11 @@ Challenge, do not approve. Push on: whether the claimed benefit survives realist
 whether any fact in the artifact was authored by a model rather than computed; whether the failure
 policy names what the consumer sees when the call fails.
 
+## Build stage
+
+If the artifact does not state what exists in code versus what is design only, treat every
+control as unbuilt and say so; do not review a planned control as a shipped one.
+
 ## Output shape
 
 For each role: the independent assessment. Then the peer challenge: what each role disputes in the

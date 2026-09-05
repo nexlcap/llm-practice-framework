@@ -20,7 +20,10 @@ roster, gates, backlog) are in `docs/llm-framework/LOCAL.md`.
 - A prompt instruction the model "disobeyed" is fixed with a structural guard (schema, vocabulary,
   numeric copy check, precision-biased audit, suppression, or removing the ability), never with
   another sentence.
-- Post-hoc guards on a trust surface are precision-biased: skip when unsure.
+- A post-hoc guard's bias is chosen from the cost asymmetry of its errors and stated in the
+  contract. Where a false correction of a correct output is costlier than a miss (a trust surface a
+  person reads), it is precision-biased: skip when unsure. Where a false refusal only costs a retry,
+  it need not be.
 - Keep the last good artifact with a TTL. A timeout or parse failure never overwrites it.
 
 **Routing**

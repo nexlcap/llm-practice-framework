@@ -15,6 +15,7 @@ Copy from the line below.
 **Id:** `<short-id>` (registered in the call-site inventory)
 **Owner:** `<person or team>`
 **Created:** `<YYYY-MM-DD>`  **Contract last reviewed:** `<YYYY-MM-DD>`
+**Build stage:** `<what exists in code today; what is design only>`
 
 ### 1. Purpose and consumer
 
@@ -73,14 +74,17 @@ Copy from the line below.
 
 ### 6. Validators, in order
 
-| # | Layer | Check | On failure |
-|---|---|---|---|
-| 1 | Schema | `<validator>` | outcome = parse_failure, keep last good |
-| 2 | Vocabulary | every id ∈ shown set | drop the item, log `vocab_reject` |
-| 3 | Numeric copy | every number == an injected value | drop the item, log `numeric_reject` |
-| 4 | Audit | `<specific failure mode checked>` | precision-biased: skip when unsure |
-| 5 | Suppression | `<what code refuses to surface regardless>` | suppressed, counted |
-| 6 | Structural | `<what the model cannot do at all>` | n/a |
+| # | Layer | Check | Status | On failure |
+|---|---|---|---|---|
+| 1 | Schema | `<validator>` | built / planned(by date) | outcome = parse_failure, keep last good |
+| 2 | Vocabulary | every id ∈ shown set | | drop the item, log `vocab_reject` |
+| 3 | Numeric copy | every number == an injected value | | drop the item, log `numeric_reject` |
+| 4 | Audit | `<specific failure mode checked>`; say what it does *not* catch | | bias chosen by cost asymmetry (see agent rules); state it |
+| 5 | Suppression | `<what code refuses to surface regardless>` | | suppressed, counted |
+| 6 | Structural | `<what the model cannot do at all>` | | n/a |
+
+The status column exists because reviewers read a validators table as shipped defence. A planned
+row is a commitment with a date, not a guarantee.
 
 **Iteration loop**: `<does the model ever see its own prior output? if yes, drift test: <test name>>`
 

@@ -3,7 +3,9 @@
 This is the step-by-step guide. `README.md` says what the framework is; this file says how to make
 it yours: which parts apply at your scale, how to install the documents, how to build the one door
 in your language, how to tailor the panel to your domain and your tool, and how to keep the copy
-current. Budget an afternoon for steps 1 to 5, then an hour per model call for step 4.
+current. Budget an afternoon for steps 1 to 5, an hour per model call for step 4, and another half
+day for the first panel gate: on an existing codebase it will find defects in code the artifact
+merely describes, and folding those in is part of adoption, not a detour from it.
 
 ---
 
@@ -191,7 +193,14 @@ to rows that add a surface, the veto seat to rows that spend or delete.
 
 The one thing no path may do is ask the session that wrote the artifact to review it.
 
-### 5.5 Put the gates in the workflow
+### 5.5 Tell reviewers the build stage
+
+Every reviewer prompt states what exists in code and what is design only, and every contract
+carries a build-stage line and a status column on its validators. The single largest class of
+findings in a retrofit gate is "the contract describes a control that is not built"; stating the
+stage up front turns those into a checklist instead of blockers.
+
+### 5.6 Put the gates in the workflow
 
 Decide where each gate physically happens and write it down:
 
