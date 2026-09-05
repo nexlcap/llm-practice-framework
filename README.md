@@ -344,3 +344,7 @@ Distilled from several months of running model-driven features in a live decisio
 its code, its design specs, and the incident record kept alongside them. Every rule traces to a
 specific failure or a specific measurement. The generic wording here deliberately drops the domain
 and the incidents; where a rule seems arbitrary, assume it was paid for.
+
+## License
+
+MIT. See `LICENSE`.
