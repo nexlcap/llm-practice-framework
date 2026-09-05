@@ -154,3 +154,42 @@ Copy from the line below.
 - **Evaluation:** metric = agreement with the manual queue's final assignment; control = keyword map
   alone; read date 2026-10-01; kill if agreement is not at least 10 points above the map.
 - **Security:** no secrets; body scrubbed of instruction-like lines; no tools; no writes.
+
+## Worked example: an agentic call (abridged)
+
+**Call site:** `assistant.run_session`  **Id:** `support_session`
+
+- **Purpose:** one support-assistant session that reads a customer's tickets and may reply, tag,
+  or escalate through tools. **Consumer:** the customer (the reply) and the support team (the
+  tags and escalations). **If it never runs:** tickets wait for a person; nothing breaks.
+- **Trigger:** a ticket enters the queue and no session is open for it; dedupe by ticket id.
+- **Injected facts:** customer tier and open tickets (from the CRM, at session start); ticket text
+  and history through read tools, live at read time (the server retrieves, the model judges).
+  **Closed vocabularies:** ticket ids, tag names, and escalation queues exist only as tool
+  arguments validated by the tool server against the database; the tool list itself is the action
+  vocabulary and nothing outside it exists. **Doctrine:** "Answer only from the ticket and the
+  knowledge base shown; escalate when unsure; never promise a refund." **External text:** every
+  ticket is customer-written and reaches the model through tool results; the server strips
+  instruction-like lines and fences each ticket as data; instruction-following on ticket content
+  is a known residual risk, bounded by the tool allowlist.
+- **Model:** mid tier; timeout 600 s wall clock, TBD(measure p95 over the first 200 sessions, by
+  a date); priority normal.
+- **Output:** no completion-level schema. The output is a sequence of tool calls; each tool's
+  argument schema is the schema layer, and the transcript is stored on the session row.
+- **Validators:** (1) tool argument schemas; (2) ids and tags exist for this customer; (3) numeric
+  copy: any amount in a reply must equal an amount shown in a tool result; (4) audit: a second
+  deterministic pass blocks replies containing "refund" unless an escalation was filed; (5)
+  suppression: caps of 12 tool calls, 2 replies, 600 s; (6) structural: only the support tool
+  server is mounted; built-in tools are disabled; the server acts only as this assistant on this
+  ticket.
+- **Failure policy:** transport error or timeout: committed tool actions stay, the session is
+  marked aborted with the partial transcript, the ticket returns to the human queue; no retry.
+- **Observability:** one call record per session with outcome class; one event row per tool call;
+  the ticket view shows "assistant replied at <time>". Liveness: completed sessions per hour.
+- **Tests:** recorded transcripts including an aborted one; tool server tests for every refusal;
+  a guard test that no code outside the door spawns the model.
+- **Evaluation:** metric = share of assistant replies not edited by a person before sending;
+  control = the human-only queue; read date set; kill if below 60 % after four weeks.
+- **Security:** no secrets in prompts; the tool server holds the database credential, the model
+  process does not; the process group is killed on timeout so the tool server never outlives the
+  session.

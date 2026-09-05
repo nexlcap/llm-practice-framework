@@ -82,8 +82,11 @@ Rules to enforce on day one, each with a test:
 - **Every registered id has a contract.** An inventory test walks the registry and asserts a file
   exists at `docs/llm-framework/contracts/<id>.md` with no unfilled template placeholder (the
   backticked `<...>` form). Fields that cannot be known before the call runs (measured latency,
-  cadence, quota share) are written as `TBD(reason, by YYYY-MM-DD)`; the test allows that form and
-  fails on a TBD without a by-date, so provisional fields expire instead of lingering.
+  cadence, quota share) are written as `TBD(reason, by YYYY-MM-DD)`. The test enforces three
+  things: a bare `TBD` or `TODO` anywhere in a contract fails; a `TBD(...)` without a by-date fails;
+  a `TBD(...)` whose by-date has passed fails. The last one is deliberate: an expired provisional
+  field turns the suite red until someone either fills it in or consciously moves the date, and
+  the moved date is a visible diff. Nothing else expires a TBD.
 - **The transport never falls back.** On error, timeout, or limit it raises a typed error; the call
   site chooses skip-loudly, keep-last-good, or abort. A test asserts no retry to another model.
 - **Environment isolation.** The transport runs with an explicit environment allowlist, its own
@@ -97,6 +100,24 @@ if available, outcome class (`ok`, `parse_failure`, `api_error`, `timeout`, `ref
 `rate_limited`), prompt hash, output hash. Put it wherever your project keeps operational data; a
 table or an append-only file both work. Liveness is "last `ok` record for this call site is younger
 than its cadence", computed from this log and nothing else.
+
+### 3.1 Retrofitting onto code that already calls a model
+
+Most adoptions are not green-field. If a transport layer and call sites already exist:
+
+1. **Inventory before anything.** List every place that reaches the model, including tests and
+   scripts. Grep for the vendor's import, endpoint, or command name; the list is the first version
+   of the registry.
+2. **Audit the door** against the six rules above, one row each in `LOCAL.md`, met or not met and
+   how. Gaps become the backlog with by-dates. Do not fix them all first; the audit is the map.
+3. **Register every existing call site now**, even ones without a contract yet, and turn on the
+   "unknown call sites raise" check. This freezes the surface: nothing new gets added unregistered
+   while contracts are backfilled.
+4. **Backfill contracts in order of cost of being wrong**, one per sitting, and mark what the code
+   does not yet do as `TBD(...)` rather than describing the design as if it were built. A contract
+   that describes planned controls as present is the most common retrofit defect; reviewers read it
+   as a security claim.
+5. **Add the guard and inventory tests** before the next feature lands, not after.
 
 ---
 
