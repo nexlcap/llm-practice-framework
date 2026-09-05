@@ -19,6 +19,8 @@ things to run it:
 The file names above are the conventional ones at the time of writing; pass the right path as the
 second argument of `adopt.sh` if your tool uses another.
 
+See `ADAPTING.md` section 5.4 for choosing the path for your tool.
+
 ## Adding an adapter
 
 - Keep `panel-protocol.md` the single source of the protocol. Generate the tool's file from it

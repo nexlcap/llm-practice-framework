@@ -14,8 +14,9 @@ Four parts:
    (`call-site-contract.md`).
 3. **Lifecycle checklists.** Decide, design inputs, prompt, guard, route, budget, observe, test,
    evaluate, review, and the developer workflow. Each item is a yes/no question.
-4. **Adoption.** How to install it in a project in an afternoon, a pull-request checklist, and a
-   maturity ladder to see where a project stands.
+4. **Adoption.** The short form is section 6 below, with a pull-request checklist and a maturity
+   ladder to see where a project stands. The full step-by-step guide, including how to tailor the
+   panel to your domain and your tool, is `ADAPTING.md`.
 
 Companion files: `panel-protocol.md` (independent review) and `agent-rules.md` (the rules as
 instructions for whatever coding agent works in the project).
@@ -29,6 +30,7 @@ and are optional.
 | Path | Purpose |
 |---|---|
 | `README.md` | This framework |
+| `ADAPTING.md` | Step-by-step guide to adopting and tailoring it: scale, one door, first contract, panel, sync |
 | `call-site-contract.md` | Template to fill per model call |
 | `panel-protocol.md` | The review protocol, tool-agnostic |
 | `agent-rules.md` | The rules as agent instructions for any instructions file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, editor rules) |
@@ -298,7 +300,7 @@ Score a project by dimension. Level 3 in every row is the target; level 1 anywhe
 
 ## 6. Adopting it in a new project
 
-An afternoon, in this order:
+The short form. `ADAPTING.md` has the full guide. An afternoon, in this order:
 
 1. **Run `adopt.sh <project>`**, which copies these documents in and appends `agent-rules.md` to the
    project's agent instructions file so every future session works under the rules.

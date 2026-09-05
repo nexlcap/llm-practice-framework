@@ -10,7 +10,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 proj="$(cd "$1" && pwd)"
 dest="$proj/docs/llm-framework"
 mkdir -p "$dest"
-cp "$here/README.md" "$here/call-site-contract.md" "$here/panel-protocol.md" "$here/agent-rules.md" "$dest/"
+cp "$here/README.md" "$here/ADAPTING.md" "$here/call-site-contract.md" "$here/panel-protocol.md" "$here/agent-rules.md" "$dest/"
 echo "copied framework to $dest"
 if [ $# -eq 2 ]; then
   rules="$2"; case "$rules" in /*) ;; *) rules="$proj/$rules";; esac
@@ -28,4 +28,5 @@ else
   { [ -s "$rules" ] && echo; cat "$here/agent-rules.md"; } >> "$rules"
   echo "appended rules to $rules"
 fi
-echo "next: write the first call-site contract from $dest/call-site-contract.md"
+mkdir -p "$dest/contracts" "$dest/evaluations"
+echo "next: follow $dest/ADAPTING.md; first contract goes in $dest/contracts/"
