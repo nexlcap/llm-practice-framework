@@ -22,9 +22,12 @@ Four parts:
 Companion files: `panel-protocol.md` (independent review) and `agent-rules.md` (the rules as
 instructions for whatever coding agent works in the project).
 
-The framework is independent of the model, the vendor, and the coding tool. Nothing in the core
-assumes a particular API, CLI, or agent product; the tool-specific pieces live under `adapters/`
-and are optional.
+The framework is independent of the model, the vendor, the coding tool, and the programming
+language. Nothing in the core assumes a particular API, CLI, agent product, or language: the one
+door, the guard tests, and the log record are specified by behavior, and the contract is prose.
+The tool-specific pieces live under `adapters/` and are optional. The three helper scripts are
+POSIX shell (Linux, macOS, or WSL and Git Bash on Windows); everything they do can be done by hand
+in a few minutes, and `ADAPTING.md` says how.
 
 ## Repository layout and install
 
@@ -180,7 +183,7 @@ Layers, applied in this order; each catches what the previous cannot:
 
 ### 3.5 Route (one door, guardrailed)
 
-- [ ] One client module. All call sites import it. A guard test (AST or grep) bans every other
+- [ ] One client module. All call sites import it. A guard test (a parser or grep over the source tree) bans every other
       route. An inventory test lists every registered call site. An unknown call site raises.
 - [ ] The subprocess or SDK runs with an environment allowlist, an isolated config directory,
       explicit credential handling, a model whitelist, and a pinned client version.
@@ -215,7 +218,7 @@ Layers, applied in this order; each catches what the previous cannot:
 ### 3.8 Test
 
 - [ ] No test calls the live model. Fixtures are recorded from real outputs, including failures.
-- [ ] Each regression test's docstring opens with the dated incident it prevents.
+- [ ] Each regression test's description (docstring, doc comment, or test name) opens with the dated incident it prevents.
 - [ ] Architectural rules (one door, no forbidden imports, no secrets in logs) have guard tests.
 - [ ] Rendered-artifact tests carry a freshness guard, or they certify whatever is on disk.
 - [ ] A live smoke test exists, is opt-in, is off by default, and says that it spends budget.
@@ -329,7 +332,7 @@ The short form. `ADAPTING.md` has the full guide. An afternoon, in this order:
 - [ ] Failure policy named and tested with a recorded failure fixture.
 - [ ] Timeout justified by a measurement.
 - [ ] Call log outcome classes cover the new failure modes.
-- [ ] Regression test docstring names the incident, or the change is not a fix.
+- [ ] Regression test description names the incident, or the change is not a fix.
 - [ ] Prompt-hash baseline refreshed if the prompt changed; A/B result linked.
 - [ ] Panel verdict linked; blockers resolved; modifications folded in.
 

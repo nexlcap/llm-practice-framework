@@ -47,7 +47,7 @@ roster, gates, backlog) are in `docs/llm-framework/LOCAL.md`.
 
 **Testing and evaluation**
 - No test calls the live model. Fixtures are recorded outputs, failures included. Regression test
-  docstrings open with the dated incident they prevent. The live smoke test is opt-in and off by
+  descriptions open with the dated incident they prevent. The live smoke test is opt-in and off by
   default.
 - Every model feature has a pre-registered metric, control, read date, and kill criterion. "No value"
   is a normal result; unconsumed output is removed.

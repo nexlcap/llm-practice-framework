@@ -1,6 +1,6 @@
 # Call-site contract
 
-One file (or one docstring block) per model call site. Fill every field before writing the prompt.
+One file (or one doc-comment block) per model call site. Fill every field before writing the prompt.
 A blank field is a design gap; a blank *consumer* means the call should not exist. A field that
 cannot be known until the call has run (measured latency, cadence, quota share) is written as
 `TBD(reason, by YYYY-MM-DD)` so the inventory test lets it through until the date. For an agentic

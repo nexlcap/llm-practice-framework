@@ -228,7 +228,7 @@ viable panel is three sessions: engineering pair, observer, frame inversion.
 - **Guard tests.** One for the vendor import, one for the registry inventory, one for secrets in
   log records, one per architectural rule you add later.
 - **Incident pins.** When a model call misbehaves in production, the fix ships with a test whose
-  docstring opens with the date and one line of what happened. Over time this is the project's real
+  description opens with the date and one line of what happened. Over time this is the project's real
   history.
 - **Surfaces.** Wherever a model-produced artifact is shown, show its age. On the operations page,
   show the call log's outcome classes per call site for the last day and the liveness per call site.
