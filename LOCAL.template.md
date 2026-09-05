@@ -12,6 +12,7 @@ reads this file first.
 | Seat | Roles |
 |---|---|
 | Domain pair | `<Role A>` ↔ `<Role B>`: `<the tension>` |
+| Second domain pair (if the project has a second question, e.g. a research method) | `<Role C>` ↔ `<Role D>`: `<the tension>` or "none" |
 | Veto seat | `<Role>`: `<the irreversible resource>` (or "none: nothing irreversible", with the reason) |
 | Data pair | ML Engineer ↔ Data Engineer |
 | Security pair | Application Security ↔ Web / Content Security |

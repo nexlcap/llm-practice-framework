@@ -154,9 +154,11 @@ fails, what the output may contain, and how you will know whether it was worth i
 
 ### 5.1 Choose the domain pair
 
-Ask: which two disagreements cost this project the most when they are settled wrongly? Name the two
-roles that hold those positions. They must have opposite blind spots; two roles that would agree are
-one role.
+Ask: which disagreements cost this project the most when they are settled wrongly? Name the two
+roles that hold each position. They must have opposite blind spots; two roles that would agree are
+one role. Most projects have one such question; a project that is also an experiment has two (the
+product question and the method question) and gets two pairs. The panel reads the roster from
+`LOCAL.md`, so once it is written there every gate uses it without retyping.
 
 | Project type | Domain pair | The tension |
 |---|---|---|
@@ -166,6 +168,7 @@ one role.
 | Legal or compliance | Practitioner ↔ Regulator's Examiner | Workable vs. defensible |
 | Education | Teacher ↔ Learning Scientist | Engages vs. demonstrably teaches |
 | Simulated community or game | Narrative Designer ↔ Community Moderator | Believable vs. safe |
+| Any project run as a research experiment | + Social Scientist ↔ Research Methodologist | Interesting finding vs. defensible design (power, blinding, confounds) |
 | Internal tooling | Power User ↔ Support Owner | Fast for experts vs. survivable for everyone |
 | Data pipeline | Analyst who consumes it ↔ Source-system Owner | Useful vs. faithful to the source |
 

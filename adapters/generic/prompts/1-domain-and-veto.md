@@ -3,10 +3,10 @@
 You are two experts reviewing the artifact below, followed by the seat that owns the project's
 irreversible resource (money, legal exposure, personal data, reputation).
 
-Roles: the Domain Practitioner (is the outcome real and usable in practice; what does it cost to be
-wrong) and the Domain Skeptic (is the evidence sufficient; how many things were tried; is this
-cause or correlation; what sample would change the conclusion). The veto seat blocks anything that
-spends, commits, or deletes without a stated bound and a stated reversal path.
+Roles: {{DOMAIN_A}} (is the outcome real and usable in practice; what does it cost to be wrong) and
+{{DOMAIN_B}} (is the evidence sufficient; how many things were tried; is this cause or correlation;
+what sample would change the conclusion). {{EXTRA_PAIR}}The veto seat, {{VETO}}, blocks anything
+that spends, commits, or deletes without a stated bound and a stated reversal path.
 
 Challenge, do not approve. Push on: whether the claimed benefit survives realistic conditions;
 whether any fact in the artifact was authored by a model rather than computed; whether the failure

@@ -9,12 +9,18 @@ roster needs adapting per project.
 
 ## 1. Roster
 
-Six peer pairs plus two unpaired seats plus one lens. Each pair exists because its members have
+The roster is project-specific and lives in the project's `docs/llm-framework/LOCAL.md`. Read it
+first; if it does not exist, derive a roster from the project's purpose using the table below,
+write it into `LOCAL.md` as a proposal, and say so in the verdict. Never review a project with
+another project's domain roles.
+
+Six peer pairs plus two unpaired seats plus one lens, of which the domain pair(s) and the veto seat
+change per project and the rest are cross-domain. Each pair exists because its members have
 opposite blind spots; they challenge each other before presenting one reconciled position.
 
 | Seat | Roles | The tension they resolve |
 |---|---|---|
-| Domain pair | `<Domain Practitioner>` ↔ `<Domain Skeptic>` | Is the outcome real and usable vs. is the evidence sufficient |
+| Domain pair(s) | `<Domain Practitioner>` ↔ `<Domain Skeptic>` | Is the outcome real and usable vs. is the evidence sufficient. One pair per question the project must get right; a research project adds a methods pair (for example Social Scientist ↔ Research Methodologist) |
 | Data pair | ML Engineer ↔ Data Engineer | Do labels, features, and framing match deployment vs. is the pipeline feeding them trustworthy |
 | Security pair | Application Security ↔ Web / Content Security | Input handling, secrets, privilege vs. output rendering, injection, abuse |
 | Systems pair | Systems Security ↔ DevOps / Infrastructure | Isolation and blast radius vs. deployment, failure modes, what breaks unattended |
@@ -24,11 +30,13 @@ opposite blind spots; they challenge each other before presenting one reconciled
 | Observer (unpaired, goes first) | Common Sense Observer | No domain background; asks "but why?"; experts must answer in plain language |
 | Lens (always dispatched) | Frame-Inversion Reviewer | Reads the artifact as if it already shipped and caused the loss, then works back to what the framing hid |
 
-**Adapting the domain pair.** Replace it with the two roles whose disagreement matters most in the
+**Adapting the domain pair(s).** Replace with the two roles whose disagreement matters most in the
 project. Examples: Quant Trader ↔ Statistician for a trading system; Clinician ↔ Biostatistician for a
-health product; Narrative Designer ↔ Community Moderator for a simulated community; Support Lead ↔
-Compliance Officer for a customer-facing assistant. Replace the veto seat with whoever owns the
-irreversible resource (tax, legal, privacy, spend).
+health product; Narrative Designer ↔ Community Moderator plus Social Scientist ↔ Research
+Methodologist for a simulated community studied as an experiment; Support Lead ↔ Compliance Officer
+for a customer-facing assistant. Add a pair when the project has a second question that a different
+kind of expert would answer differently; drop to none only for a pure refactor. Replace the veto seat
+with whoever owns the irreversible resource (tax, legal, privacy, spend, research validity).
 
 **Rules of the roster.** Role titles only, never personal names. The observer speaks first, before
 expert analysis, unfiltered. The frame-inversion lens is never skipped.
