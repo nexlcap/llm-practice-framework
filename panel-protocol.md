@@ -1,0 +1,139 @@
+# Expert panel protocol (generic)
+
+Independent, multi-perspective review of any design, spec, or build result before a person sees it.
+Reviewers are separate model sessions (subagents) with only the artifact and the relevant code in
+context. The author never reviews its own work inline. This file is written to be dropped into any
+project as a skill or a checklist; only the domain pair in the roster needs adapting.
+
+## 1. Roster
+
+Six peer pairs plus two unpaired seats plus one lens. Each pair exists because its members have
+opposite blind spots; they challenge each other before presenting one reconciled position.
+
+| Seat | Roles | The tension they resolve |
+|---|---|---|
+| Domain pair | `<Domain Practitioner>` ↔ `<Domain Skeptic>` | Is the outcome real and usable vs. is the evidence sufficient |
+| Data pair | ML Engineer ↔ Data Engineer | Do labels, features, and framing match deployment vs. is the pipeline feeding them trustworthy |
+| Security pair | Application Security ↔ Web / Content Security | Input handling, secrets, privilege vs. output rendering, injection, abuse |
+| Systems pair | Systems Security ↔ DevOps / Infrastructure | Isolation and blast radius vs. deployment, failure modes, what breaks unattended |
+| Engineering pair | Software Engineer ↔ Code Reviewer | Does the complexity earn its keep vs. edge cases, hidden coupling, tests that assert nothing |
+| Experience pair | UX Designer ↔ Data Visualization | Can the user act on it vs. does the display say what the data says |
+| Veto seat (unpaired) | `<Irreversible-resource Advisor>` | Anything that spends or commits an irreversible resource: money, legal exposure, personal data, reputation |
+| Observer (unpaired, goes first) | Common Sense Observer | No domain background; asks "but why?"; experts must answer in plain language |
+| Lens (always dispatched) | Frame-Inversion Reviewer | Reads the artifact as if it already shipped and caused the loss, then works back to what the framing hid |
+
+**Adapting the domain pair.** Replace it with the two roles whose disagreement matters most in the
+project. Examples: Quant Trader ↔ Statistician for a trading system; Clinician ↔ Biostatistician for a
+health product; Narrative Designer ↔ Community Moderator for a simulated community; Support Lead ↔
+Compliance Officer for a customer-facing assistant. Replace the veto seat with whoever owns the
+irreversible resource (tax, legal, privacy, spend).
+
+**Rules of the roster.** Role titles only, never personal names. The observer speaks first, before
+expert analysis, unfiltered. The frame-inversion lens is never skipped.
+
+## 2. Scoping by change type
+
+Convene only the seats the change touches. Proportionality is part of the protocol.
+
+| Change type | Seats |
+|---|---|
+| Any change | Observer, Frame-Inversion, Engineering pair |
+| Decision logic, model prompts, scoring, thresholds | + Domain pair, Data pair, Veto seat |
+| New data source, scraper, credential, external text | + Security pair, Systems pair |
+| Deployment, scheduling, process lifecycle, timeouts | + Systems pair |
+| Dashboard, report, or anything a person reads | + Experience pair |
+| Anything that spends, commits, or deletes | + Veto seat |
+| Pure refactor with no behavior change | Engineering pair, Observer, Frame-Inversion only |
+
+## 3. Dispatch
+
+- **Two to four review agents, dispatched in parallel, in one message.** Group seats by family
+  (typically: domain + veto; security + systems; engineering + experience + observer). The
+  frame-inversion lens is its own agent.
+- **Never role-play the panel inline.** The session that wrote the artifact cannot review it; with
+  the artifact still in context every "reviewer" agrees with the author.
+- **Each agent's prompt contains:** the roles it embodies (by title); the artifact path, to be read
+  in full; the specific code files that matter; what to push on, named explicitly; the required
+  output shape (section 4); and an instruction to challenge rather than approve, with examples of the
+  kind of finding that would be valuable.
+- **Say what to push on.** "Review this" produces approval. "Find the way this loses the user money in
+  month three", "find the path where the guard is never called", "find the assumption the author
+  made because they wrote the previous version" produce findings.
+- **Give the frame-inversion agent the inverted frame explicitly.** "Assume this shipped, ran for a
+  quarter, and caused a loss. Write the incident report. Then identify what in the artifact's framing
+  made that outcome invisible."
+
+### Reviewer prompt skeleton
+
+```
+You are reviewing <artifact> as a panel of <Role A> and <Role B>.
+Read <artifact path> in full, then <code paths>.
+Push on: <three to five named concerns>.
+For each role: independent assessment, then the peer challenge (what the other role
+disputes), then one reconciled position: agree / disagree-with-reasoning / escalate.
+Verdict: exactly one of BLOCKERS, MODIFY-BEFORE-BUILD, APPROVE-AS-IS, with each finding
+as: what, where (file:line or section), why it matters, what would resolve it.
+Do not approve without surfacing at least one concern the author did not already list;
+if you find none, say so and explain what you checked.
+```
+
+## 4. Output shape
+
+Per pair:
+
+1. Each role's independent assessment.
+2. The peer challenge: what each role disputes in the other's assessment.
+3. One reconciled position: agree, disagree-with-reasoning, or escalate.
+4. Verdict in exactly one class:
+   - **Blockers**: must be resolved before build; the reason and the resolving change.
+   - **Modify-before-build**: specific changes, folded into the artifact before it is presented.
+   - **Approve-as-is**: with what was checked, so a lenient prompt is visible.
+
+Consolidated verdicts read like "MODIFY-BEFORE-BUILD (3 modify, 1 blocker absorbed)" or "3
+independent groups, unanimous approve, frame-inversion 1 modify".
+
+## 5. Consolidation
+
+- Any blocker from any seat blocks.
+- Modifications are folded into the artifact before the user sees it. The user confirms a design the
+  panel has already vetted; they are not the first-line reviewer.
+- Every finding is a hypothesis. The author re-verifies each one against the code or the data before
+  adopting it, and records refuted findings with the evidence. Panels are independent, not infallible.
+- The consolidated verdict, the seats convened, and the links to each agent's report are recorded
+  with the artifact.
+
+## 6. Reproducing load-bearing verdicts
+
+A single blocker, or a clean approve on something risky, is load-bearing. Re-dispatch the decisive
+pair (fresh agent, same prompt) and require agreement across runs.
+
+- A blocker that does not reproduce is demoted to modify-before-build.
+- An approve that does not reproduce means the concern is live; treat it as modify.
+- Record the run count with the verdict ("K=3 convergence"). The logic is unanimity: a finding
+  counts when it appears in every run of one arm and none of the other.
+
+## 7. Gates
+
+Three, for every change, no exceptions for "quick" work:
+
+| Gate | When | The questions |
+|---|---|---|
+| Design | Before the design is presented | Is the problem framed right? What is the simplest thing that works? What breaks unattended? |
+| Spec | Before the user reviews the spec | Is every fact injected, every identifier closed, every failure policy named? What did the framing hide? |
+| Results | After the build, before conclusions | Are the numbers plausible against known values? Cause or effect? Alternative explanations? Honest limitations? Does anything consume the output? |
+
+## 8. Quality check on the panel itself
+
+- If every reviewer approves and nothing new surfaced, the prompts were too lenient. Re-run with
+  sharper "push on" instructions before recording the approval.
+- The product of a panel is the surprising concern: the one the author did not already list.
+- Findings about code adjacent to the change are welcome and are recorded separately as latent
+  issues; reviewers read the surrounding code, not only the diff.
+- The panel advises; the user decides. A panel argument that rests on the user's personal traits or
+  habits is out of scope unless the user put it in scope.
+
+## 9. Cost
+
+Two to four agent runs per gate, each reading the artifact plus code. The scoping table keeps it
+proportionate. The justification, every time: a wrong decision, a wrong rule, or a misleading display
+costs more than a few minutes of independent review.
