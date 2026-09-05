@@ -5,8 +5,11 @@ description: Convene an independent expert review panel on a design, spec, plan,
 
 # Expert panel (generic)
 
-A project-local skill of the same name, carrying a domain roster, overrides this one inside that
-project. This is the generic form: adapt the domain pair and the veto seat to the project at hand.
+This is the generic form. **Step 0, before anything else:** if the current project has its own
+`.claude/skills/expert-panel/SKILL.md`, read that file and follow it instead of this one; it carries
+the project's domain roster. Personal skills shadow project skills of the same name, so this file
+cannot rely on the project's copy loading by itself. Otherwise adapt the domain pair and the veto
+seat below to the project at hand.
 
 ## When this fires
 

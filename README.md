@@ -304,7 +304,8 @@ An afternoon, in this order:
 4. **Add the surfaces.** Put the call log, outcome classes, and staleness "as of" on whatever admin
    or operations page exists. Derive liveness from the log.
 5. **Install the panel.** Run `install.sh` once per machine so the `/expert-panel` skill exists in
-   every project; add a project-local copy with a domain roster when the generic pair is not enough.
+   every project; add a project-local `.claude/skills/expert-panel/SKILL.md` with a domain roster when
+   the generic pair is not enough (the global skill defers to it).
    Put the three gates into the project's workflow.
 6. **Set the first read date.** Metric, control, and kill criterion for the first feature, written
    where the review will find them.
