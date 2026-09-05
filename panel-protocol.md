@@ -1,9 +1,11 @@
 # Expert panel protocol (generic)
 
 Independent, multi-perspective review of any design, spec, or build result before a person sees it.
-Reviewers are separate model sessions (subagents) with only the artifact and the relevant code in
-context. The author never reviews its own work inline. This file is written to be dropped into any
-project as a skill or a checklist; only the domain pair in the roster needs adapting.
+Reviewers are separate model sessions with only the artifact and the relevant code in context: fresh
+delegated agents where the coding tool has them, separate command-line runs or chats where it does
+not. The author never reviews its own work inline. The protocol is independent of the model, the
+vendor, and the tool; `adapters/` holds the tool-specific ways to run it. Only the domain pair in the
+roster needs adapting per project.
 
 ## 1. Roster
 
@@ -47,19 +49,19 @@ Convene only the seats the change touches. Proportionality is part of the protoc
 
 ## 3. Dispatch
 
-- **Two to four review agents, dispatched in parallel, in one message.** Group seats by family
-  (typically: domain + veto; security + systems; engineering + experience + observer). The
-  frame-inversion lens is its own agent.
+- **Two to four reviewer sessions, run in parallel.** Group seats by family (typically: domain +
+  veto; security + systems; engineering + experience + observer). The frame-inversion lens is its
+  own session.
 - **Never role-play the panel inline.** The session that wrote the artifact cannot review it; with
   the artifact still in context every "reviewer" agrees with the author.
-- **Each agent's prompt contains:** the roles it embodies (by title); the artifact path, to be read
+- **Each reviewer's prompt contains:** the roles it embodies (by title); the artifact path, to be read
   in full; the specific code files that matter; what to push on, named explicitly; the required
   output shape (section 4); and an instruction to challenge rather than approve, with examples of the
   kind of finding that would be valuable.
 - **Say what to push on.** "Review this" produces approval. "Find the way this loses the user money in
   month three", "find the path where the guard is never called", "find the assumption the author
   made because they wrote the previous version" produce findings.
-- **Give the frame-inversion agent the inverted frame explicitly.** "Assume this shipped, ran for a
+- **Give the frame-inversion reviewer the inverted frame explicitly.** "Assume this shipped, ran for a
   quarter, and caused a loss. Write the incident report. Then identify what in the artifact's framing
   made that outcome invisible."
 
@@ -99,13 +101,13 @@ independent groups, unanimous approve, frame-inversion 1 modify".
   panel has already vetted; they are not the first-line reviewer.
 - Every finding is a hypothesis. The author re-verifies each one against the code or the data before
   adopting it, and records refuted findings with the evidence. Panels are independent, not infallible.
-- The consolidated verdict, the seats convened, and the links to each agent's report are recorded
+- The consolidated verdict, the seats convened, and the links to each reviewer's report are recorded
   with the artifact.
 
 ## 6. Reproducing load-bearing verdicts
 
 A single blocker, or a clean approve on something risky, is load-bearing. Re-dispatch the decisive
-pair (fresh agent, same prompt) and require agreement across runs.
+pair (fresh session, same prompt) and require agreement across runs.
 
 - A blocker that does not reproduce is demoted to modify-before-build.
 - An approve that does not reproduce means the concern is live; treat it as modify.
@@ -132,8 +134,15 @@ Three, for every change, no exceptions for "quick" work:
 - The panel advises; the user decides. A panel argument that rests on the user's personal traits or
   habits is out of scope unless the user put it in scope.
 
-## 9. Cost
+## 9. Running it
 
-Two to four agent runs per gate, each reading the artifact plus code. The scoping table keeps it
+Any tool works as long as each reviewer gets a fresh context, the artifact, and the code. With a
+coding agent that can delegate to fresh-context agents, dispatch them in parallel. With a plain
+command-line model or an HTTP API, run each reviewer as a separate invocation; `adapters/generic/`
+has a runner and the four reviewer prompts. `adapters/` lists the tool-specific forms.
+
+## 10. Cost
+
+Two to four reviewer runs per gate, each reading the artifact plus code. The scoping table keeps it
 proportionate. The justification, every time: a wrong decision, a wrong rule, or a misleading display
 costs more than a few minutes of independent review.

@@ -17,8 +17,12 @@ Four parts:
 4. **Adoption.** How to install it in a project in an afternoon, a pull-request checklist, and a
    maturity ladder to see where a project stands.
 
-Companion files: `panel-protocol.md` (independent review) and `CLAUDE.md.fragment` (rules for an
-agent working in the project).
+Companion files: `panel-protocol.md` (independent review) and `agent-rules.md` (the rules as
+instructions for whatever coding agent works in the project).
+
+The framework is independent of the model, the vendor, and the coding tool. Nothing in the core
+assumes a particular API, CLI, or agent product; the tool-specific pieces live under `adapters/`
+and are optional.
 
 ## Repository layout and install
 
@@ -27,14 +31,15 @@ agent working in the project).
 | `README.md` | This framework |
 | `call-site-contract.md` | Template to fill per model call |
 | `panel-protocol.md` | The review protocol, tool-agnostic |
-| `CLAUDE.md.fragment` | The rules as agent instructions; works verbatim as an `AGENTS.md` section for other coding agents |
-| `skills/expert-panel/SKILL.md` | The protocol as a Claude Code skill (same text plus execution steps; edit both together) |
-| `install.sh` | Installs the skill for every Claude Code project on this machine (`~/.claude/skills/expert-panel`) |
-| `adopt.sh <project>` | Copies the documents into `<project>/docs/llm-framework/` and appends the fragment to its `CLAUDE.md` once |
+| `agent-rules.md` | The rules as agent instructions for any instructions file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, editor rules) |
+| `adopt.sh <project> [rules-file]` | Copies the documents into `<project>/docs/llm-framework/` and appends the rules to the project's instructions file once |
+| `adapters/README.md` | What a tool needs to run the framework, and the known tool-specific forms |
+| `adapters/generic/` | A runner that executes the panel with any command-line model, plus the four reviewer prompts |
+| `adapters/claude-code/` | The protocol packaged as a skill, with an installer |
 
 ```
-./install.sh              # once per machine
-./adopt.sh ~/some-project  # once per project
+./adopt.sh ~/some-project            # once per project; detects AGENTS.md / CLAUDE.md / GEMINI.md
+adapters/claude-code/install.sh      # optional, once per machine, for that tool
 ```
 
 ---
@@ -239,8 +244,9 @@ Summarized here; the full protocol is `panel-protocol.md`.
 
 ### 3.11 Developer workflow with agents
 
-- [ ] A subagent's brief is the single source of its requirements and is read-only to the subagent.
-- [ ] Subagents never touch branch state. Git is limited to add, commit, status, log, diff.
+- [ ] A delegated agent's brief is the single source of its requirements and is read-only to that
+      agent.
+- [ ] Delegated agents never touch branch state. Git is limited to add, commit, status, log, diff.
 - [ ] Each task gets a task review for spec compliance and quality; the whole branch gets one final
       review on the most capable model. Plan bugs propagate verbatim; reviewers catch them, not
       confidence in the plan.
@@ -294,8 +300,8 @@ Score a project by dimension. Level 3 in every row is the target; level 1 anywhe
 
 An afternoon, in this order:
 
-1. **Run `adopt.sh <project>`**, which copies these documents in and pastes `CLAUDE.md.fragment` into
-   the project's agent instructions so every future session works under the rules.
+1. **Run `adopt.sh <project>`**, which copies these documents in and appends `agent-rules.md` to the
+   project's agent instructions file so every future session works under the rules.
 2. **Build the door.** One package (for example `llm/`) with a transport, a `complete()` entry
    point, a call-site registry, and a call log sink. Write the guard test that bans other routes and
    the inventory test that lists registered sites. Pin the client version.
@@ -303,10 +309,9 @@ An afternoon, in this order:
    validators before its prompt. Record fixtures from the first real outputs.
 4. **Add the surfaces.** Put the call log, outcome classes, and staleness "as of" on whatever admin
    or operations page exists. Derive liveness from the log.
-5. **Install the panel.** Run `install.sh` once per machine so the `/expert-panel` skill exists in
-   every project; add a project-local `.claude/skills/expert-panel/SKILL.md` with a domain roster when
-   the generic pair is not enough (the global skill defers to it).
-   Put the three gates into the project's workflow.
+5. **Install the panel.** Pick the adapter for your tool (`adapters/README.md`), or use the generic
+   runner with any command-line model. Adapt the domain pair. Put the three gates into the
+   project's workflow.
 6. **Set the first read date.** Metric, control, and kill criterion for the first feature, written
    where the review will find them.
 

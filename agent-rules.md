@@ -1,8 +1,9 @@
-## LLM usage rules (paste into the project's CLAUDE.md)
+## LLM usage rules
 
-These apply to every model call this project makes and to every agent session working on it. The
-full framework is in `docs/llm-framework/` (or wherever this project keeps it). The same text works
-as an `AGENTS.md` section for other coding agents.
+Paste into whichever file the project's coding agent reads for instructions (`AGENTS.md`,
+`CLAUDE.md`, `GEMINI.md`, `.cursor/rules`, `.github/copilot-instructions.md`, or equivalent). The
+rules apply to every model call this project makes and to every agent session working on it. The
+full framework is in `docs/llm-framework/` (or wherever this project keeps it).
 
 **Design**
 - No model call exists without a call-site contract (`call-site-contract.md`). A blank consumer
@@ -51,13 +52,14 @@ as an `AGENTS.md` section for other coding agents.
 
 **Review**
 - Designs, specs, and results go to the expert panel (`panel-protocol.md`) before the user sees
-  them: separate subagents by role title, scoped to the change, always including a frame-inversion
+  them: separate reviewer sessions by role title, scoped to the change, always including a frame-inversion
   reviewer. Never role-play the panel inline. Any blocker blocks; modifications are folded in first;
   load-bearing verdicts are re-run until they reproduce. Panel findings are re-verified before
   adoption.
 
 **Agent workflow**
-- A subagent's brief is the single source of its requirements. Subagents never touch branch state.
+- A delegated agent's brief is the single source of its requirements. Delegated agents never touch
+  branch state.
   The final gate is the full test suite with the real exit code. Verify the live artifact after
   deploy and again after its first natural run. Numbers you assert are fetched or computed with a
   read date; a number from memory is a hypothesis.

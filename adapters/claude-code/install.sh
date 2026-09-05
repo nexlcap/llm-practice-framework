@@ -9,6 +9,6 @@ if [ -e "$dest" ] && [ ! -f "$dest/SKILL.md" ]; then
   echo "refusing to replace $dest: not a skill directory" >&2; exit 1
 fi
 rm -rf "$dest"
-cp -r "$here/skills/expert-panel" "$dest"
+cp -r "$here/expert-panel" "$dest"
 echo "installed $dest"
-echo "adopt the framework in a project: $here/adopt.sh <project-dir>"
+echo "adopt the framework in a project: $here/../../adopt.sh <project-dir>"
