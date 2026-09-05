@@ -88,7 +88,8 @@ Rules to enforce on day one, each with a test:
   things: a bare `TBD` or `TODO` anywhere in a contract fails; a `TBD(...)` without a by-date fails;
   a `TBD(...)` whose by-date has passed fails. The last one is deliberate: an expired provisional
   field turns the suite red until someone either fills it in or consciously moves the date, and
-  the moved date is a visible diff. Nothing else expires a TBD.
+  the moved date is a visible diff. Nothing else expires a TBD. Let the by-date match across a
+  line wrap (`by\s+YYYY-MM-DD`); prose reflows.
 - **The transport never falls back.** On error, timeout, or limit it raises a typed error; the call
   site chooses skip-loudly, keep-last-good, or abort. A test asserts no retry to another model.
 - **Environment isolation.** The transport runs with an explicit environment allowlist, its own
