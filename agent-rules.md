@@ -1,9 +1,8 @@
 ## LLM usage rules
 
-Paste into whichever file the project's coding agent reads for instructions (`AGENTS.md`,
-`CLAUDE.md`, `GEMINI.md`, `.cursor/rules`, `.github/copilot-instructions.md`, or equivalent). The
-rules apply to every model call this project makes and to every agent session working on it. The
-full framework is in `docs/llm-framework/` (or wherever this project keeps it).
+These rules apply to every model call this project makes and to every agent session working on
+it. The full framework is in `docs/llm-framework/`; project-specific decisions (scale, panel
+roster, gates, backlog) are in `docs/llm-framework/LOCAL.md`.
 
 **Design**
 - No model call exists without a call-site contract (`call-site-contract.md`). A blank consumer

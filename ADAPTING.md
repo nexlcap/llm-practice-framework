@@ -18,7 +18,9 @@ column; grow into the next row when the project does.
 | **Service** | Calls in production, other code or people depend on the output | Everything in the core: contract per call, one door with guard and inventory tests, guard layers, failure policy, per-call log with outcome classes, staleness surfaces, incident-pinned tests, evaluation with a read date, panel at the three gates | Throttle with live utilization, drift detection |
 | **Agentic product** | The model can act: call tools, write data, message people | Everything above, plus tool allowlists, a validating tool server, injection scrub and fence on all external text, the security and systems pairs at every gate | Nothing; all of it applies |
 
-Write the chosen scale at the top of your copy of `agent-rules.md`. Reviewers will hold you to it.
+Write the chosen scale in `docs/llm-framework/LOCAL.md` and in the project's instructions file above
+the pasted rules (not inside the framework files, which refreshes overwrite). Reviewers will hold you
+to it.
 
 ---
 
@@ -31,21 +33,28 @@ From the framework checkout:
 ./adopt.sh /path/to/project .cursor/rules/llm.md   # or name the instructions file yourself
 ```
 
-This copies `README.md`, `ADAPTING.md`, `call-site-contract.md`, `panel-protocol.md`, and
-`agent-rules.md` into `docs/llm-framework/`, and appends `agent-rules.md` to the instructions file
-once. Re-running is safe.
+This copies `README.md`, `ADAPTING.md`, `call-site-contract.md`, `evaluation.md`,
+`panel-protocol.md`, and `agent-rules.md` into `docs/llm-framework/`, creates `LOCAL.md` from a
+template if it does not exist, creates `contracts/` and `evaluations/`, and appends `agent-rules.md`
+to the instructions file once. If no instructions file exists it infers the tool from its config
+directory and says which file it chose; check that your tool actually reads that file. Re-running
+is safe and never touches `LOCAL.md`.
 
 Without the script: copy the same files and paste `agent-rules.md` into whatever your coding agent
 reads. If your team uses no coding agent, paste it into `CONTRIBUTING.md` and add the pull-request
 checklist from `README.md` section 6 to the PR template. The rules are for people as much as for
 agents.
 
-Create two directories the framework expects to exist:
+The script creates:
 
 ```
+docs/llm-framework/LOCAL.md       # scale, roster, scoping table, gates, door audit, backlog, review log
 docs/llm-framework/contracts/     # one call-site contract per model call
-docs/llm-framework/evaluations/   # one pre-registration per model feature
+docs/llm-framework/evaluations/   # one pre-registration per model feature (copy evaluation.md)
 ```
+
+If the project already has a door module, do the door audit in `LOCAL.md` before writing any
+contract: one row per rule in section 3, met or not met and how. The gaps become the first backlog.
 
 ---
 
@@ -71,7 +80,10 @@ Rules to enforce on day one, each with a test:
 - **Unknown call sites raise.** `complete()` looks the id up in the registry and raises on a miss.
   No default route.
 - **Every registered id has a contract.** An inventory test walks the registry and asserts a file
-  exists at `docs/llm-framework/contracts/<id>.md` with no unfilled placeholder.
+  exists at `docs/llm-framework/contracts/<id>.md` with no unfilled template placeholder (the
+  backticked `<...>` form). Fields that cannot be known before the call runs (measured latency,
+  cadence, quota share) are written as `TBD(reason, by YYYY-MM-DD)`; the test allows that form and
+  fails on a TBD without a by-date, so provisional fields expire instead of lingering.
 - **The transport never falls back.** On error, timeout, or limit it raises a typed error; the call
   site chooses skip-loudly, keep-last-good, or abort. A test asserts no retry to another model.
 - **Environment isolation.** The transport runs with an explicit environment allowlist, its own
@@ -91,7 +103,11 @@ than its cadence", computed from this log and nothing else.
 ## 4. Write the first contract
 
 Choose the call with the highest cost of being wrong, not the easiest one. Copy
-`call-site-contract.md` to `docs/llm-framework/contracts/<id>.md` and fill every field. Then
+`call-site-contract.md` to `docs/llm-framework/contracts/<id>.md` and fill every field. For an
+agentic call (the model acts through tools) the output schema is each tool's argument schema and the
+closed vocabularies are enforced by the tool server; say so in the contract rather than leaving the
+fields blank. Register the id in the registry at the same time so the inventory test guards the
+contract from day one. Then
 implement in this order, because each step constrains the next:
 
 1. **Validators first.** Schema, closed-vocabulary check, numeric copy check, suppression rules.
@@ -148,7 +164,7 @@ to rows that add a surface, the veto seat to rows that spend or delete.
 
 | Your tool can... | Do this |
 |---|---|
-| Delegate to fresh-context agents in parallel | Use or write an adapter: a short header that says how to dispatch, followed by the protocol body. `adapters/claude-code/` is the pattern; `adapters/README.md` says what an adapter must and must not do. |
+| Delegate to fresh-context agents in parallel | Use or write an adapter: a short header that says how to dispatch, followed by the protocol body. `adapters/claude-code/` is the pattern; `adapters/README.md` says what an adapter must and must not do. Tools discover skills at session start, so restart sessions after installing. |
 | Run a model from the command line | `adapters/generic/panel-run.sh` with `LLM_REVIEW_CMD` set. Reviewers get the artifact and code inlined. Put the change-specific concerns in `PANEL_PUSH_ON`. |
 | Only chat | Open one fresh chat per reviewer prompt in `adapters/generic/prompts/`, paste the prompt and the artifact, save each reply as a report. Separate chats are separate contexts; this is a valid panel. |
 

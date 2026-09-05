@@ -32,6 +32,8 @@ and are optional.
 | `README.md` | This framework |
 | `ADAPTING.md` | Step-by-step guide to adopting and tailoring it: scale, one door, first contract, panel, sync |
 | `call-site-contract.md` | Template to fill per model call |
+| `evaluation.md` | Template for a feature's pre-registered evaluation |
+| `LOCAL.template.md` | Template for the project's own decisions (scale, roster, gates, door audit, backlog) |
 | `panel-protocol.md` | The review protocol, tool-agnostic |
 | `agent-rules.md` | The rules as agent instructions for any instructions file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, editor rules) |
 | `adopt.sh <project> [rules-file]` | Copies the documents into `<project>/docs/llm-framework/` and appends the rules to the project's instructions file once |

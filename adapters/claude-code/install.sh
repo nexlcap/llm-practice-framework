@@ -11,4 +11,5 @@ fi
 rm -rf "$dest"
 cp -r "$here/expert-panel" "$dest"
 echo "installed $dest"
+echo "skills are discovered when a session starts: restart any running session before invoking /expert-panel"
 echo "adopt the framework in a project: $here/../../adopt.sh <project-dir>"
