@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # Install the expert-panel skill for every Claude Code project on this machine.
-# Target: $CLAUDE_SKILLS_DIR (default ~/.claude/skills). Idempotent. An existing copy that differs
-# from the source is moved aside to <target>.bak.<timestamp>, never deleted; a symlinked target is
-# refused. Customisations belong in a project's .claude/skills/expert-panel/, which shadows this copy.
+# Target: $CLAUDE_SKILLS_DIR (default ~/.claude/skills), an absolute path. Idempotent. An existing copy
+# that differs from the source is moved aside to <target>.bak.<timestamp>, never deleted; a symlinked
+# target is refused. Customisations belong in a project's .claude/skills/expert-panel/, which shadows
+# this copy.
 set -euo pipefail
+[ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "bash 4 or newer required" >&2; exit 2; }
 here="$(cd -- "$(dirname -- "$0")" && pwd)"
 base="${CLAUDE_SKILLS_DIR:-}"
 if [ -z "$base" ]; then
   [ -n "${HOME:-}" ] || { echo "set HOME or CLAUDE_SKILLS_DIR" >&2; exit 2; }
   base="$HOME/.claude/skills"
 fi
+case "$base" in /*) ;; *) echo "CLAUDE_SKILLS_DIR must be an absolute path: $base" >&2; exit 2;; esac
 src="$here/expert-panel"
 dest="$base/expert-panel"
 if [ -L "$dest" ]; then
