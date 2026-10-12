@@ -289,6 +289,7 @@ t_documents_do_not_drift() {
   check "six framework files everywhere" bash -c '! grep -qE "(five|four) framework files|those five files" "$@"' _ "${docs[@]}"
   check "stated policy, not doctrine" bash -c '! grep -qi doctrine "$@"' _ "${docs[@]}"
   check "every TBD in the contract template has a by-date" test -z "$(tr '\n' ' ' < "$root/call-site-contract.md" | grep -o 'TBD([^)]*)' | grep -v 'by [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' | grep -v YYYY)"
+  check "no bare n/a in the copyable part of the contract template" test -z "$(sed -n '/^---$/,$p' "$root/call-site-contract.md" | grep -nE 'n/a([^(]|$)')"
   for f in README.md ADAPTING.md agent-rules.md call-site-contract.md; do
     check "$f names the truncated and cap_hit outcome classes" bash -c "grep -q truncated '$root/$f' && grep -q cap_hit '$root/$f'"
   done
