@@ -66,7 +66,7 @@ the contracts.
 
 Without the script: copy the same files and paste `agent-rules.md` into whatever your coding agent
 reads. If your team uses no coding agent, paste it into `CONTRIBUTING.md` and add the pull-request
-checklist from `README.md` section 6 to the PR template. The rules are for people as much as for
+checklist below (2.1) to the PR template. The rules are for people as much as for
 agents.
 
 The script creates:
@@ -80,6 +80,24 @@ docs/llm-framework/evaluations/   # one pre-registration per model feature (copy
 
 If the project already has a door module, do the door audit in `LOCAL.md` before writing any
 contract: one row per rule in section 3, met or not met and how. The gaps become the first backlog.
+
+### 2.1 Pull-request checklist for any change touching a model call
+
+- [ ] Contract updated; no blank fields; every `n/a` has a reason; deleted sections are named on the
+      Shape line.
+- [ ] New or changed facts are injected, not requested.
+- [ ] New identifiers are in a closed vocabulary with a validator scoped to the principal.
+- [ ] Output schema changed at generation time, not parsed from prose.
+- [ ] Failure policy named and tested with a recorded failure fixture.
+- [ ] Timeout justified by a measurement.
+- [ ] Model id is a pinned snapshot with its lifecycle date recorded.
+- [ ] Any irreversible action the model can reach has its approval step or reversal path named.
+- [ ] Fixtures added are redacted.
+- [ ] Call log outcome classes cover the new failure modes.
+- [ ] Regression test description names the incident, or the change is not a fix.
+- [ ] Prompt-template hash baseline refreshed if the prompt changed; a changed static prefix notes
+      the expected cache-hit drop; golden-set result linked.
+- [ ] Panel report linked; blockers resolved; modifications folded in.
 
 ---
 

@@ -101,8 +101,10 @@ the two disagree, say so instead of routing around either.
 
 **Agent workflow**
 - A delegated agent's brief is the single source of its requirements. Delegated agents never move
-  branches: git is limited to add, commit, status, log, diff on the branch they were given. The final
-  check is the full test suite with the real exit code. Verify the live artifact after deploy and
-  again after its first natural run. Configuration, rules, and credentials are human-only files;
-  hand the command to the human. Numbers you assert are fetched or computed with a read date; a
-  number from memory is a hypothesis.
+  branches: git is limited to add, commit, status, log, diff on the branch they were given. Each
+  delegated task gets a review for spec compliance and quality, and the whole branch one final
+  review on the most capable model: plan bugs propagate verbatim. The final check is the full test
+  suite with the real exit code. Verify the live artifact after deploy and again after its first
+  natural run. Configuration, rules, and credentials are human-only files; hand the command to the
+  human. Numbers you assert are fetched or computed with a read date; a number from memory is a
+  hypothesis.

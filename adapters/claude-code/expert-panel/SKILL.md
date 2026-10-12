@@ -28,7 +28,8 @@ proposal, and say in the verdict that the roster is proposed, not confirmed.
 2. **Put the artifact in a file** if it is not one already. Reviewers read files and code, never
    pasted text.
 3. **Dispatch two to four reviewer agents in one message** with the Agent tool as fresh subagents
-   with read-only tools (Read, Grep, Glob; never Bash, Edit, or Write: they read untrusted text).
+   with read-only tools (Read, Grep, Glob, and Write to its own report path only; never Bash or
+   Edit: they read untrusted text).
    Never use a fork: a fork inherits this session's context and defeats independence. Use a capable
    model for decision logic, prompts, and specs; a mid-tier model for mechanical diffs. Each agent
    gets: its roles by title (grouped as domain + data + veto; security + systems; engineering +
@@ -118,10 +119,12 @@ Convene only the seats the change touches. Proportionality is part of the protoc
   its own session. The minimum, for a pure refactor, is two sessions.
 - **Never role-play the panel inline.** The session that wrote the artifact cannot review it; with
   the artifact still in context every "reviewer" agrees with the author.
-- **Reviewers run with read-only tools or none.** In a coding agent: file reading and search only,
-  never shell, edit, or write; in the generic runner: the CLI's non-interactive mode with tools
-  disabled. They read untrusted text, and their only output is the report; the orchestrator parses
-  the verdict line structurally and a person reads the report. This is the panel's own ceiling.
+- **Reviewers run with read-only tools or none.** In a coding agent: file reading and search, plus
+  writing its own report file, never shell or edit; in the generic runner: the CLI's non-interactive
+  mode with tools disabled. They read untrusted text, and their only output is the report; the
+  orchestrator parses the verdict line structurally and a person reads the report. This is the
+  panel's own ceiling. A reviewer that must run a script under review gets a scratch copy and a
+  shell, and the record says so.
 - **Each reviewer's prompt contains:** the roles it embodies (by title); the artifact path, to be read
   in full; the specific code files that matter; the build stage (what exists in code, what is design
   only), so a planned control is not reviewed as a shipped one; what to push on, named explicitly;

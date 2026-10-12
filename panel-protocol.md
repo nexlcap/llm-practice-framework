@@ -64,10 +64,12 @@ Convene only the seats the change touches. Proportionality is part of the protoc
   its own session. The minimum, for a pure refactor, is two sessions.
 - **Never role-play the panel inline.** The session that wrote the artifact cannot review it; with
   the artifact still in context every "reviewer" agrees with the author.
-- **Reviewers run with read-only tools or none.** In a coding agent: file reading and search only,
-  never shell, edit, or write; in the generic runner: the CLI's non-interactive mode with tools
-  disabled. They read untrusted text, and their only output is the report; the orchestrator parses
-  the verdict line structurally and a person reads the report. This is the panel's own ceiling.
+- **Reviewers run with read-only tools or none.** In a coding agent: file reading and search, plus
+  writing its own report file, never shell or edit; in the generic runner: the CLI's non-interactive
+  mode with tools disabled. They read untrusted text, and their only output is the report; the
+  orchestrator parses the verdict line structurally and a person reads the report. This is the
+  panel's own ceiling. A reviewer that must run a script under review gets a scratch copy and a
+  shell, and the record says so.
 - **Each reviewer's prompt contains:** the roles it embodies (by title); the artifact path, to be read
   in full; the specific code files that matter; the build stage (what exists in code, what is design
   only), so a planned control is not reviewed as a shipped one; what to push on, named explicitly;

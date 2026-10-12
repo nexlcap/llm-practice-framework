@@ -63,23 +63,15 @@ someone other than the operator, if the model can read or move another person's 
 if every turn feeds the next, the agentic worked example in `call-site-contract.md` is a floor, not a
 ceiling, and `ADAPTING.md` section 1 says which contract sections each shape uses and what to drop.
 
-## Repository layout and install
+## Install
 
-| Path | Purpose |
-|---|---|
-| `README.md` | This framework |
-| `ADAPTING.md` | Step-by-step guide to adopting and tailoring it: scale and shape, one door, first contract, panel, sync |
-| `call-site-contract.md` | Template to fill per model call, with two worked examples |
-| `evaluation.md` | Template for a feature's pre-registered evaluation |
-| `LOCAL.template.md` | Template for the project's own decisions (becomes `LOCAL.md`: scale, roster, gates, door audit, backlog, framework read date) |
-| `panel-protocol.md` | The review protocol, tool-agnostic |
-| `agent-rules.md` | The rules as agent instructions for any instructions file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, editor rules) |
-| `adopt.sh <project> [instructions-file]` | Copies the six documents above (less the template, which becomes `LOCAL.md`) and the licence into `<project>/docs/llm-framework/`, and keeps the rules in the project's instructions file between two markers |
-| `adapters/README.md` | What a tool needs to run the framework, and the known tool-specific forms |
-| `adapters/generic/` | A runner that executes the panel with any command-line model, plus the reviewer prompts |
-| `adapters/claude-code/` | The protocol packaged as a skill, generated from `panel-protocol.md`, with an installer |
-| `tests/run.sh` | Tests for the scripts and for drift between these documents |
-| `docs/reviews/` | This framework's own panel reports |
+`adopt.sh <project>` copies the six framework documents (this file, `ADAPTING.md`,
+`call-site-contract.md`, `evaluation.md`, `panel-protocol.md`, `agent-rules.md`) and the licence into
+the project's `docs/llm-framework/`, creates `LOCAL.md` from `LOCAL.template.md` for the project's
+own decisions, and keeps the rules in the project's instructions file between two markers;
+`ADAPTING.md` section 2 is the full version. `adapters/` holds the optional tool-specific pieces,
+`tests/run.sh` the tests for the scripts and for drift between these documents, and `docs/reviews/`
+this framework's own panel reports.
 
 ```
 ./adopt.sh ~/some-project            # once per project; writes docs/llm-framework/ and a rules block
@@ -177,9 +169,6 @@ blank consumer field means the call should not exist.
 ## 3. Lifecycle checklists
 
 ### 3.1 Decide: should this be a model call at all? (sufficiently)
-
-Where volume is high, two tiers (a cheap, frequent, narrow call and a rare, expensive, broad one) is
-the usual pattern.
 
 - [ ] A deterministic rule, map, or regex was tried first, and the model handles only the inputs it
       does not cover.
@@ -343,9 +332,6 @@ Layers, applied in this order; each catches what the previous cannot:
 
 ### 3.6 Budget (efficiently)
 
-The budget unit is whatever is scarce: money, a quota window, wall-clock, or a rate limit. Once the
-transport is fixed, the remaining lever is which calls exist.
-
 - [ ] Latencies are measured before caps are set.
 - [ ] A scheduler owns concurrency and priority: cap, token bucket, slowdown and pause thresholds
       read from live utilization, cancellation-safe slots.
@@ -471,27 +457,15 @@ exists the project scores at most Review level 2 on the ladder, whatever the fil
 
 ### 3.11 Developer workflow with agents
 
-- [ ] A delegated agent's brief is the single source of its requirements and is read-only to that
-      agent.
-- [ ] Delegated agents never move branches: git is limited to add, commit, status, log, and diff on
-      the branch they were given; no checkout, rebase, merge, or push.
-- [ ] Each task gets a task review for spec compliance and quality; the whole branch gets one final
-      review on the most capable model. Plan bugs propagate verbatim; reviewers catch them, not
-      confidence in the plan.
-- [ ] The live artifact is verified after deploy, and again after the first natural run of the
-      producing step.
-- [ ] Configuration, rules, and credentials are human-only files, and the tool's permission system
-      (deny rules, hooks, sandbox) enforces it. The sentence in the instructions file is
-      documentation.
-- [ ] Numbers an agent asserts (dates, prices, schedules, rates) are fetched or computed with a read
-      date. A number from memory is a hypothesis.
+The rules for agents that build the project (the brief as single source, no branch moves, task and
+final reviews, verification after deploy, numbers with a read date) are in `agent-rules.md` under
+"Agent workflow"; they govern the coding agent, not the model call. Configuration, rules, and
+credentials are human-only files, and that rule binds only where the tool's permission system (deny
+rules, hooks, sandbox) enforces it: the sentence in the instructions file is documentation (P3).
 
 ---
 
 ## 4. The learning curve, so you can skip it
-
-Projects that use models tend to move through the same phases. The framework lets a new project
-start at phase three.
 
 | Phase | Question the project is answering | What gets built |
 |---|---|---|
@@ -503,8 +477,8 @@ start at phase three.
 | 6. Evaluated | Is it worth keeping? | Pre-registered read dates, controls, kill criteria, consumption checks |
 | 7. Reviewed | How do we stop shipping the same mistake? | Independent panel at three gates, incident-pinned tests, guard tests |
 
-Phases one and two are where most projects live. The contract (section 2) forces phases three to
-six at design time, and the panel protocol adds phase seven.
+The contract (section 2) forces phases three to six at design time, and the panel protocol adds
+phase seven.
 
 ---
 
@@ -537,10 +511,7 @@ anywhere at Service scale is a known risk.
 
 ## 6. Adopting it in a new project
 
-The short form; `ADAPTING.md` has the full guide and the honest time budget (an afternoon to install
-and write a first simple contract on a green-field project, a day for the door and its tests, half a
-day per further call site, two weeks of production logging before the measured fields can be filled;
-a retrofit is about a day per existing call site). In this order:
+The short form; `ADAPTING.md` has the full guide and the time budget. In this order:
 
 1. **Run `adopt.sh <project>`**, which copies these documents in and puts `agent-rules.md` into the
    project's agent instructions file between two markers, so every future session works under the
@@ -561,23 +532,7 @@ a retrofit is about a day per existing call site). In this order:
 6. **Set the first read date.** Metric, control, dev and golden sets, kill criterion, and harm floor
    for the first feature, written where the review will find them.
 
-### Pull-request checklist for any change touching a model call
-
-- [ ] Contract updated; no blank fields; every `n/a` has a reason; deleted sections are named on the
-      Shape line.
-- [ ] New or changed facts are injected, not requested.
-- [ ] New identifiers are in a closed vocabulary with a validator scoped to the principal.
-- [ ] Output schema changed at generation time, not parsed from prose.
-- [ ] Failure policy named and tested with a recorded failure fixture.
-- [ ] Timeout justified by a measurement.
-- [ ] Model id is a pinned snapshot with its lifecycle date recorded.
-- [ ] Any irreversible action the model can reach has its approval step or reversal path named.
-- [ ] Fixtures added are redacted.
-- [ ] Call log outcome classes cover the new failure modes.
-- [ ] Regression test description names the incident, or the change is not a fix.
-- [ ] Prompt-template hash baseline refreshed if the prompt changed; a changed static prefix notes
-      the expected cache-hit drop; golden-set result linked.
-- [ ] Panel report linked; blockers resolved; modifications folded in.
+The pull-request checklist for any change touching a model call is `ADAPTING.md` section 2.1.
 
 ---
 
@@ -601,7 +556,8 @@ a person or passes a recall-biased check. Scrubbing and fencing are hygiene, not
 real-time surface to a third party (voice, live chat without buffering) cannot pass layers 1 to 5
 before the person receives the output; the framework does not cover it, and the options are a person
 who speaks from a draft, or code-rendered templates where the model chooses only among templates.
-Section 3.11 governs agents that build this project; a product that is itself a coding agent needs
+The agent-workflow rules (3.11) govern agents that build this project; a product that is itself a
+coding agent needs
 its own branch-state and approval rules in `LOCAL.md`, and its pull-request review is an approval
 step only if the approver is not the person who issued the instruction.
 

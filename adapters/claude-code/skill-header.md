@@ -28,7 +28,8 @@ proposal, and say in the verdict that the roster is proposed, not confirmed.
 2. **Put the artifact in a file** if it is not one already. Reviewers read files and code, never
    pasted text.
 3. **Dispatch two to four reviewer agents in one message** with the Agent tool as fresh subagents
-   with read-only tools (Read, Grep, Glob; never Bash, Edit, or Write: they read untrusted text).
+   with read-only tools (Read, Grep, Glob, and Write to its own report path only; never Bash or
+   Edit: they read untrusted text).
    Never use a fork: a fork inherits this session's context and defeats independence. Use a capable
    model for decision logic, prompts, and specs; a mid-tier model for mechanical diffs. Each agent
    gets: its roles by title (grouped as domain + data + veto; security + systems; engineering +
