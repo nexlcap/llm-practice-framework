@@ -25,7 +25,7 @@ runs once per file.
 | Security pair | Application Security ↔ Web / Content Security |
 | Systems pair | Systems Security ↔ DevOps / Infrastructure |
 | Engineering pair | Software Engineer ↔ Code Reviewer |
-| Experience pair | UX Designer ↔ Data Visualization Specialist |
+| Experience pair | UX Designer ↔ `<Data Visualization Specialist for a display of numbers, or Technical Writer for a document>` |
 | Observer, Frame-Inversion Reviewer | always |
 
 ## Scoping table (panel-protocol.md section 2)
@@ -35,6 +35,7 @@ runs once per file.
 | Any change | Observer, Frame-Inversion Reviewer, Engineering pair |
 | `<your change type>` | + `<seats>` |
 | Removing a human control | + Domain pair, Veto seats |
+| A data source a contract lists changed (schema, filter, access rule) | re-opens that contract's spec gate |
 | Pure refactor | Engineering pair, Observer, Frame-Inversion Reviewer |
 
 ## Gates (ADAPTING.md section 5.6)
@@ -51,12 +52,19 @@ runs once per file.
 |---|---|
 | Only the transport touches the vendor | `<met / not met: how>` |
 | Unknown call sites raise | |
-| Every registered id has a contract | |
+| Every registered id has a contract; structural and calendar checks | |
 | Transport never falls back; retries bounded with idempotency keys | |
 | Environment isolation | |
 | Timeouts measured | |
-| Model ids are pinned snapshots with retirement dates | |
+| Model ids are fixed snapshots with lifecycle dates; who watches the vendor page: `<role>` | |
 | Log record minimum fields | |
+
+## Project-level controls referenced by every contract
+
+- Vendor terms relied on: `<retention, training opt-out, zero-data-retention, region, agreement, checked on <date>>`
+- Sandbox for agentic calls: `<filesystem scope; egress allowlist; no credential in the model process>`
+- Guard tests: `<one-door, inventory, secrets-and-personal-data in logs and fixtures, pinned-model>`
+- Content sample readers and access: `<role, where they read, how reads are logged>`
 
 ## Rules added or dropped for this project
 
@@ -68,10 +76,10 @@ runs once per file.
 
 ## Framework read date (README.md P8, applied to this adoption)
 
-`<YYYY-MM-DD>`. Metrics: contracts whose "last reviewed" is within 90 days; panel findings adopted
-versus refuted per seat; incidents with a pinned test; expired TBDs. Kill criteria per practice:
-`<e.g. drop the design gate for changes under n lines if two quarters of design-gate verdicts were
-approve>`.
+`<YYYY-MM-DD>`. Metrics: contracts whose "last reviewed" is within 180 days; panel findings adopted
+versus refuted per seat; incidents with a pinned test; expired TBDs; content-sample reads logged
+versus scheduled. Kill criteria per practice: `<e.g. drop the design gate for changes under n lines
+if two quarters of design-gate verdicts were approve>`.
 
 ## Review log
 

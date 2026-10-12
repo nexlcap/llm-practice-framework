@@ -24,6 +24,6 @@ control as unbuilt and say so; do not review a planned control as a shipped one.
 
 The incident report, then the list of what the framing hid, each item quoting the artifact.
 
-Then the verdict, exactly one of these words on its own line: BLOCKERS, MODIFY-BEFORE-BUILD,
-APPROVE-AS-IS. Under it, each finding as: what, where, why it matters, what would resolve it. An
+Then the verdict, exactly one of these words alone on its own line, with no formatting around it:
+BLOCKERS, MODIFY-BEFORE-BUILD, APPROVE-AS-IS. Under it, each finding as: what, where, why it matters, what would resolve it. An
 approve must list the failure scenarios you constructed and why each does not hold.

@@ -31,7 +31,7 @@ control as unbuilt and say so; do not review a planned control as a shipped one.
 For each role: the independent assessment. Then the peer challenge: what each role disputes in the
 other's assessment. Then one reconciled position: agree, disagree-with-reasoning, or escalate.
 
-Then the verdict, exactly one of these words on its own line: BLOCKERS, MODIFY-BEFORE-BUILD,
-APPROVE-AS-IS. Under it, each finding as: what, where (file and line or section), why it matters,
+Then the verdict, exactly one of these words alone on its own line, with no formatting around it:
+BLOCKERS, MODIFY-BEFORE-BUILD, APPROVE-AS-IS. Under it, each finding as: what, where (file and line or section), why it matters,
 what would resolve it. Do not approve without surfacing at least one concern the author did not
 already list; if you find none, say so and list exactly what you checked.
