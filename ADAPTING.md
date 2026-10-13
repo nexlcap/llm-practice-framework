@@ -17,11 +17,13 @@ cadence, alert thresholds) take two weeks of logging to fill, however fast the r
 ## 1. Decide the scale and the shape first
 
 The framework is proportionate by design. Pick the row that describes the project and adopt that
-column; grow into the next row when the project does.
+column; grow into the next row when the project does. Capability and audience decide the row, not
+size: the moment the model can act through a tool, or the output reaches anyone but the person
+running it, the project is Agentic or Service whatever its size.
 
 | Scale | What it looks like | Mandatory | Optional until it hurts |
 |---|---|---|---|
-| **Script** | One or two model calls, one person, output read by that person | Injected facts, structured output with schema validation, one function that makes the call, a log line per call, one recorded and redacted fixture, one separate reviewer session before relying on it | Registry, throttle, evaluation file, full panel |
+| **Script** | One or two model calls, one person, output read by that person | Injected facts, structured output with schema validation, one function that makes the call, a log line per call, one recorded and redacted fixture, one separate reviewer session before relying on it, and no tool the model can call (otherwise the Agentic row) | Registry, throttle, evaluation file, full panel |
 | **Service** | Calls in production, other code or people depend on the output | Everything in the core: contract per call, one door with guard and inventory tests, validator layers, failure policy, per-call log with outcome classes, staleness surfaces, incident-pinned tests, pinned model snapshots, evaluation with a read date and a harm floor, panel at the three gates | Throttle with live utilization, drift detection |
 | **Agentic product** | The model can act: call tools, write data, message people | Everything above, plus tool allowlists, a tool server that receives the acting principal from the door and scopes every read and write to that principal's entitlement, a sandbox with an egress allowlist, hard caps, a human approval step or reversibility design for every irreversible action, a nonce fence on all external text, redacted transcripts with a retention, a content sample drawn by code, one veto seat per irreversible resource, and the security and systems pairs at every gate | Nothing; all of it applies |
 
@@ -59,8 +61,9 @@ comments, which must stay at column 1 as one pair. If no instructions file exist
 from its config directory and says which file it chose; check that your tool actually reads that
 file. If several candidate files exist it uses the first and names the others; a team whose tools
 read different files runs the script once per file. Re-running is safe: it checks everything before
-writing anything, refreshes the six files and the marked block in place, and never touches
-`LOCAL.md`, `contracts/`, or `evaluations/`. The rules block is read by the agent on every task; a
+writing anything, refreshes the six files and the marked block in place, never touches `LOCAL.md`,
+`contracts/`, or `evaluations/`, and prints the section headings the current template has that
+`LOCAL.md` lacks. The rules block is read by the agent on every task; a
 team whose tool supports path-scoped instruction files places it so that it loads for the door and
 the contracts.
 
@@ -76,6 +79,7 @@ docs/llm-framework/LOCAL.md       # scale, shapes, roster, scoping table, gates,
 docs/llm-framework/.adopt         # instructions file (contained to the project), source repository, framework commit
 docs/llm-framework/contracts/     # one call-site contract per model call
 docs/llm-framework/evaluations/   # one pre-registration per model feature (copy evaluation.md)
+docs/llm-framework/reviews/       # panel reports, one directory per gate; the CI check reads this path
 ```
 
 If the project already has a door module, do the door audit in `LOCAL.md` before writing any
@@ -178,15 +182,16 @@ Rules to enforce on day one, each with a test. The door audit in `LOCAL.md` has 
    difference beyond the stated tolerance alerts as drift. A snapshot change is handled like a prompt
    change: fixtures re-recorded, golden set re-run, effort re-swept, deprecated parameters removed,
    baseline refreshed in the same commit.
-8. **Log record, minimum fields:** timestamp, call site, session or trace id, parent call id for an
-   agent step, requested and served model id, effort, duration, input, output, and cached-read
+8. **Log record, minimum fields:** timestamp, call site, acting principal as an opaque id where the
+   call runs for more than one, session or trace id, parent call id for an agent step, requested and served model id, effort, duration, input, output, and cached-read
    tokens if available, stop reason, whether external text was read (`read_external`), outcome class
    (`ok`, `parse_failure`, `api_error`, `timeout`, `refused`, `rate_limited`, `truncated`, `cap_hit`,
    `cancelled`; exactly one per call: `timeout` is the transport's time limit, `cap_hit` a
    door-enforced budget, `cancelled` an external decision before completion), prompt-template hash,
    output hash. Put it wherever your project keeps operational data; a table or an append-only file
    both work. Liveness is "last `ok` record for this call site is younger than its cadence",
-   computed from this log and nothing else; for request-response and conversational shapes the
+   computed from this log and nothing else, per principal for a scheduled artifact produced per
+   principal; for request-response and conversational shapes the
    record comes from a scheduled canary call through the door against a synthetic principal, counted
    separately from user traffic.
 
@@ -329,12 +334,16 @@ Decide where each gate physically happens and write it down:
 In a team, "the user" in the protocol is whoever approves the PR; the panel verdict is attached
 before human review begins, and `LOCAL.md` names that role per gate. Make the gate mechanical: a CI
 check fails any change that touches the door, a registered call site, or a contract unless it links
-a report under `docs/llm-framework/reviews/` dated after the last change to those paths that is not
+a report under `docs/llm-framework/reviews/` whose verdict line, parsed by the check, is present and
+not BLOCKERS, dated after the last change to those paths that is not
 a change the report itself requested (a commit that folds in the report's modifications cites the
 report and does not invalidate it), and runs beside the inventory test. A change to a data source a
 contract lists re-opens that contract's spec gate; where another team owns the source this is a
 notification agreement, not a CI check, and the residual is stated in `LOCAL.md`. By P3 the sentence
-in the instructions file is a request; the check is the control. A solo developer runs the same
+in the instructions file is a request; the check is the control. Refuting or demoting a blocker is a
+decision like moving a by-date (section 8): a second person who is not the author records it with
+the evidence, and the review log keeps each session's own verdict beside the consolidated one, so
+the record cannot read better than the reports. A solo developer runs the same
 gates; the minimum viable panel is two sessions: the engineering pair with the observer, and the
 Frame-Inversion Reviewer.
 
@@ -349,12 +358,15 @@ Frame-Inversion Reviewer.
   the repository. Record for a day, curate, commit the redacted set. Tests read fixtures only; no
   test calls the model. Add one opt-in live smoke test that says in its name that it spends budget.
 - **Guard tests.** One for the vendor import, one for the registry inventory, one for secrets and
-  personal-data patterns in log records and in the fixtures directory, one for pinned model ids, one
+  personal-data patterns in log records, in the fixtures directory, and in
+  `docs/llm-framework/reviews/` (reviewers quote what they read), one for pinned model ids, one
   per architectural rule you add later. Each has a fixture that makes it fail, so a test that passes
   on an empty project is visible.
 - **Entitlement tests.** For every call that shows the model evidence about a person or a tenant, a
-  fixture record owned by another principal (and one with no owner) is never shown and never
-  emitted, tested through the production entry point.
+  fixture record owned by another principal (and one with no owner) is never shown, emitted, or
+  served, tested through the production entry point on the success path and on each failure-policy
+  path (a failure for principal A after a success for principal B serves A nothing of B's); and a
+  request authenticated as A cannot be bound to B.
 - **Incident pins.** When a model call misbehaves in production, the fix ships with a test whose
   description opens with the date and one line of what happened. The shape: the fixture is the
   recorded output that caused the incident; the test runs the validators through the production
@@ -373,8 +385,9 @@ Frame-Inversion Reviewer.
   cadence are reviewed at the read date and never fall below the floor's detection requirement.
 - **Alerts.** Start with: five parse failures per hour per call site, any API error class above ten
   per hour, silence longer than twice the cadence (for request-response shapes: a failed canary), any
-  cap hit, any served model id outside the allowlist, a canary output that differs from its fixture.
-  Tune from the log after two weeks.
+  cap hit, any served model id outside the allowlist, a canary output that differs from its fixture,
+  defaults or last-good artifacts served to one principal above a stated count per period. Tune from
+  the log after two weeks.
 - **Evaluation.** On the read date, compare against the control written in the evaluation file, read
   the harm floor on the same day, and record the result in the same file. Remove or pause features
   that miss the kill criterion or breach the floor, and keep the file as the record of why. A
@@ -394,9 +407,13 @@ The documents are copied, not linked, so a project's copy does not change under 
 ```
 
 The refresh rewrites the rules block between the two marker comments and says so when it changed;
-re-read the block then, because the agent reads it, not the docs copy. If the markers are damaged
+re-read the block then, because the agent reads it, not the docs copy. It also prints the section
+headings `LOCAL.template.md` has that your `LOCAL.md` lacks; add them, since contracts and reviewers
+point at them. Re-run your tool's adapter installer (`adapters/claude-code/install.sh`) after each
+update so the installed skill matches the protocol. If the markers are damaged
 (indented, duplicated, one missing) the script refuses and changes nothing; fix the marker lines by
-hand. If you named the instructions file on the first run, `.adopt` remembers it; a team with
+hand. Marker lines quoted inside a ``` fence are documentation and are left alone; CRLF line endings
+and a leading BOM are kept; a symlinked instructions file is refused, pass its target. If you named the instructions file on the first run, `.adopt` remembers it; a team with
 several files re-runs once per file. Keep project-specific additions out of the six files so a
 refresh cannot clobber them:
 

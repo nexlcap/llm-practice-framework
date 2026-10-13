@@ -4,16 +4,16 @@ For engineers building software that calls a large language model. A project-ind
 for using models **sufficiently** (no more and no less than the job needs), **critically** (never
 trusting the output), **effectively** (prompts that work), **efficiently** (cost, time, throughput),
 and **within bounds** (what the model can reach and move is limited by code, not by the prompt). It
-was distilled from five months of production use in one system; which rules are backed by an
-incident and which are reasoned is stated under Provenance and limits at the end.
+was distilled from five months of production use in one system; Provenance and limits, at the end,
+says which groups of rules are paid for by an incident and which are reasoned. Where a rule seems
+arbitrary, treat it as a hypothesis with a stated rationale.
 
 The framework is independent of the model, the vendor, the coding tool, and the programming
-language: the one door, the guard tests, and the log record are specified by behavior, and the
-contract is prose. The tool-specific pieces live under `adapters/` and are optional. The helper
-scripts are bash 4 or newer (Linux, macOS with Homebrew bash and coreutils, WSL, Git Bash);
-everything they do can be done by hand in a few minutes, and `ADAPTING.md` says how. Reading this
-inside a project's `docs/llm-framework/`? The scripts, the adapters, and the review record are in the
-upstream repository named in `.adopt` beside this file.
+language; the tool-specific pieces live under `adapters/` and are optional. The helper scripts are
+bash 4 or newer (Linux, macOS with Homebrew bash and coreutils, WSL, Git Bash); everything they do
+can be done by hand in a few minutes, and `ADAPTING.md` says how. Reading this inside a project's
+`docs/llm-framework/`? The scripts, the adapters, and the review record are in the upstream
+repository named in `.adopt` beside this file.
 
 ## Map
 
@@ -21,7 +21,7 @@ upstream repository named in `.adopt` beside this file.
 |---|---|---|
 | 1. Principles | Eight principles. The essence. | Always |
 | 2. The call-site contract | The unit of design; no model call exists without one (`call-site-contract.md`) | Before writing any call |
-| 3. Lifecycle checklists | Decide, design inputs, prompt, validate, route, budget, observe, test, evaluate, review, agent workflow. Each box is one check. | While designing and reviewing a call |
+| 3. Lifecycle checklists | Decide, design inputs, prompt, validate, route, budget, observe, test, evaluate, review, agent workflow. Each box is one check; 3.11 points to the agent rules. | While designing and reviewing a call |
 | 4. The learning curve | The seven phases projects pass through, so a new one can start at phase three | To place a project |
 | 5. Maturity ladder | Score a project per dimension | At a results gate |
 | 6. Adopting it | The short form; `ADAPTING.md` is the full guide | When installing |
@@ -29,6 +29,9 @@ upstream repository named in `.adopt` beside this file.
 **Terms**, in the order they are needed.
 
 - *Call site*: one place in the code that asks the model something. A *call* is one execution of it.
+- *Consumer* and *operator*: the consumer is who or what reads the output; the operator is the team
+  that runs the system. Whether the consumer is the operator decides the audit's bias, the content
+  sample, and the ladder.
 - *Shape*: a call is a scheduled artifact, a request-response call, a conversation, or an agentic
   session. The contract says which sections each shape uses.
 - *The door*: the one client module every call site imports. Its *transport* file is the only code
@@ -39,12 +42,18 @@ upstream repository named in `.adopt` beside this file.
   the prompt so the model does not invent one.
 - *Acting principal*: the person or system on whose behalf the call runs, and whose entitlement
   bounds what the model may see and do. Code binds it; the model never names it.
+- *Entitlement*: the records, evidence, and actions a principal may see or cause, as the system of
+  record defines them. That a record exists is not entitlement to it.
+- *Snapshot*: of a model, an id the vendor documents as fixed; of inputs, the set computed once per
+  call that the prompt builder and the validators both read.
 - *Fence*: start and end markers around untrusted text, carrying a random per-call token so the model
   can tell where the text begins and ends. Hygiene, not a control.
 - *Ceiling*: what the model could reach and move if every instruction to it were ignored; the
   control that bounds it is code (tool server, sandbox, allowlist).
 - *Suppression*: code deciding what reaches the consumer regardless of what the model said.
   *Deterministic default*: a fixed answer code serves when the call fails, labelled as such.
+- *Budget unit*: whatever is scarce for the call (money, a quota window, wall clock, a rate limit);
+  caps are set and spend is counted in it.
 - *Incident pin*: a regression test whose description opens with the dated incident it prevents.
 - *Dev set* and *golden set*: labelled inputs; the dev set is iterated against, the golden set is
   scored once per candidate and never read during iteration.
@@ -52,31 +61,38 @@ upstream repository named in `.adopt` beside this file.
   metric says.
 - *Veto seats*: the panel roles that own the project's irreversible resources, one per resource.
   *Frame inversion*: reading an artifact as if it had already shipped and failed.
+- *Scale*: Script, Service, or Agentic product, chosen in `ADAPTING.md` section 1 by what the model
+  can do and who reads the output, never by size.
 - `TBD(reason, by date)`: a contract field that cannot be known until the call has run.
   `n/a(reason)`: a single field that does not apply; a whole section the shape does not use is
   deleted and named on the Shape line.
 
 **Where it came from, and what that shaped.** The source was a scheduled, single-tenant
 decision-support pipeline whose output was read by its own operator. The principles transfer. The
-vocabulary of cadence, staleness, and keep-last-good was shaped by that system. If your consumer is
+vocabulary of cadence, staleness, and keep-last-good was shaped by that system, and so were the
+examples and the loss model: a false fact in prose, read by the operator. Every rule here about
+another person's data, money, or messages is reasoned, not paid for. If your consumer is
 someone other than the operator, if the model can read or move another person's data or money, or
 if every turn feeds the next, the agentic worked example in `call-site-contract.md` is a floor, not a
 ceiling, and `ADAPTING.md` section 1 says which contract sections each shape uses and what to drop.
 
 ## Install
 
-`adopt.sh <project>` copies the six framework documents (this file, `ADAPTING.md`,
-`call-site-contract.md`, `evaluation.md`, `panel-protocol.md`, `agent-rules.md`) and the licence into
-the project's `docs/llm-framework/`, creates `LOCAL.md` from `LOCAL.template.md` for the project's
-own decisions, and keeps the rules in the project's instructions file between two markers;
-`ADAPTING.md` section 2 is the full version. `adapters/` holds the optional tool-specific pieces,
-`tests/run.sh` the tests for the scripts and for drift between these documents, and `docs/reviews/`
-this framework's own panel reports.
+`adopt.sh <project>` copies the six framework documents (this file; `ADAPTING.md`, the adoption
+guide; `call-site-contract.md`, the per-call template; `evaluation.md`, the per-feature
+pre-registration template; `panel-protocol.md`, the review protocol; `agent-rules.md`, the rules as
+agent instructions) and the licence into the project's `docs/llm-framework/`, creates `LOCAL.md`
+from `LOCAL.template.md` for the project's own decisions, and keeps the rules in the project's
+instructions file between two markers; `ADAPTING.md` section 2 is the full version. If no coding
+agent reads such a file, the rules go into `CONTRIBUTING.md`: they are for people as much as for
+agents. `adapters/` holds the optional tool-specific pieces, `tests/run.sh` the tests for the
+scripts and for drift between these documents, and `docs/reviews/` this framework's own panel
+reports.
 
 ```
 ./adopt.sh ~/some-project            # once per project; writes docs/llm-framework/ and a rules block
                                      # into AGENTS.md / CLAUDE.md / GEMINI.md (it says which)
-adapters/claude-code/install.sh      # optional, once per machine, for that tool
+adapters/claude-code/install.sh      # optional, for that tool; once per machine and after each update
 ```
 
 ---
@@ -90,7 +106,8 @@ recalls, or invents them. Code decides what evidence exists and shows it; the mo
 it is shown and cites what it used; code validates the judgment before anything acts on it. Model
 output feeds another model call only labelled as a claim to be checked, never as a fact, and a
 sub-agent that read any external text is external text to its caller: fenced, labelled, and under
-the caller's ceiling.
+the caller's ceiling and the caller's acting principal, which it inherits from the door, never from
+the arguments of the call that spawned it.
 
 **P2. Bound what the model can do, not only what it says.** Every call site states its ceiling: what
 the model could reach and move if every instruction to it were ignored, which tools, which records,
@@ -99,8 +116,7 @@ sandbox, and the allowlist, never by the prompt. The acting principal is the par
 bounds the output, not the identity that runs the call; code binds it from the authenticated request
 and scopes every read, every write, and every piece of evidence shown to the model to it, never by
 the model's account of who is asking. An action that cannot be undone passes a human approval step
-at a named surface or a deterministic reversibility design (draft-not-send, soft delete with a
-recovery window, a hold queue a named person releases).
+at a named surface or a deterministic reversibility design (3.5).
 
 **P3. Instructions are requests; code is the control.** A rule the model "disobeyed" is not fixed by
 another sentence in the prompt. It is fixed by a structural validator: schema validation, a closed
@@ -109,8 +125,7 @@ suppression layer, or by removing the model's ability to do the thing at all.
 
 **P4. One door.** Every call goes through one client module with an allowlist of registered call
 sites and pinned model snapshots. An unregistered caller raises. The transport never falls back
-silently; the call site decides how to degrade. Enforced by tests, not by convention. For a hosted
-agent loop the door is the agent's configuration file (section 3.5).
+silently; the call site decides how to degrade. Enforced by tests, not by convention.
 
 **P5. Frequency before quality.** The first cost lever is how often you call, not which model. Run a
 call only when its input changed, deduplicate overlapping schedules, tie cadence to the consumer's
@@ -160,13 +175,16 @@ Every model call is designed once, as a contract, before it is written. The temp
 
 A call whose contract has a blank field is not ready. A field that cannot be known until the call
 has run is `TBD(reason, by date)` and the inventory test lets it through until the date; a single
-field that does not apply is `n/a(reason)` and the reason is reviewed at the spec gate; a section
+field that does not apply is `n/a(reason)`, and the reason is a review-only control, judged at the
+spec gate because no structural check can; a section
 the call's shape does not use is deleted and named on the Shape line. A bare `n/a` is a blank. A
 blank consumer field means the call should not exist.
 
 ---
 
 ## 3. Lifecycle checklists
+
+The pull-request checklist that compresses this section is `ADAPTING.md` section 2.1.
 
 ### 3.1 Decide: should this be a model call at all? (sufficiently)
 
@@ -187,8 +205,10 @@ blank consumer field means the call should not exist.
 - [ ] The prompt never asks the model for a number, a date, or an identifier it is not shown.
 - [ ] Every piece of evidence shown to the model is within the entitlement of the consumer named in
       the contract, filtered by code, with a test whose fixture is a record owned by another
-      principal (including a record with no owner). A call that produces output for several
-      consumers at once is several calls, one principal each.
+      principal (including a record with no owner), run on the success path and on each
+      failure-policy path: a failure for one principal after a success for another never serves
+      the other's artifact or default. A call that produces output for several consumers at once is
+      several calls, one principal each, sharing no store (3.4).
 - [ ] Every identifier the output may reference is in the prompt (for an agentic call: is a tool
       argument the server validates), and the output is validated against that set. Unknown
       identifiers are dropped, never clipped or repaired.
@@ -254,7 +274,8 @@ Layers, applied in this order; each catches what the previous cannot:
    Its bias follows the cost asymmetry of its errors and is written in the contract. Precision-biased
    (skip when unsure) only where the reader is the operator and can ignore the output. Recall-biased
    (hold when unsure and route to a person) wherever a miss reaches a third party, moves money, or
-   discloses personal data. A reply to a customer is always the second kind.
+   discloses personal data or operator-internal fields (internal notes, tags, margins). A reply to a
+   customer is always the second kind.
 5. **Deterministic suppression.** Code decides what may reach the consumer regardless of what the
    model said.
 6. **Structural impossibility.** The model has no way to do the forbidden thing: no tool, no field,
@@ -265,7 +286,9 @@ Layers, applied in this order; each catches what the previous cannot:
       is buffered, validated, then rendered, or the residual is stated in the contract.
 - [ ] Where an artifact persists between runs, the last good one is kept with a TTL, a timeout or
       parse failure never overwrites it, and the contract says what the consumer sees when the TTL
-      expires.
+      expires. Where the call runs for more than one principal, the last-good store, the
+      deterministic default, and the deduplication key are keyed by (call site, acting principal):
+      a failure for one principal never serves another's artifact or default.
 - [ ] No model output is a control input without a deterministic check between them.
 - [ ] A compaction summary, a sub-agent report, or a persisted note that re-enters the context is
       model output: the facts it carries are re-derived from source or dropped.
@@ -294,7 +317,8 @@ Layers, applied in this order; each catches what the previous cannot:
       process is orphaned.
 - [ ] Hard-fail at the transport, degrade at the call site. The four call-site policies are skip
       loudly, deterministic default, keep last good with a TTL, abort. A deterministic default is
-      visibly a default where it is read and is counted per call site; a default the consumer cannot
+      visibly a default where it is read and is counted per call site and, where the call runs for
+      more than one principal, per principal; a default the consumer cannot
       tell from a model answer is a silent fallback. Silent fallback to another model or route is a
       bug; a designed cascade (cheap model first, escalate on a deterministic condition) is a
       registered route of its own.
@@ -310,7 +334,7 @@ Layers, applied in this order; each catches what the previous cannot:
       - an explicit tool allowlist;
       - the tool server holds the credentials and validates every read and write against the acting
         principal's entitlement, which the door binds from the authenticated request, never from a
-        tool argument the model fills;
+        tool argument the model fills, and which a sub-agent inherits from the door;
       - the model process has a filesystem scope, a network-egress allowlist, and no credential of
         its own;
       - every tool call has its own timeout, enforced by the tool server.
@@ -323,7 +347,8 @@ Layers, applied in this order; each catches what the previous cannot:
       delete, publish, change permissions) passes a human approval step at a named surface by a named
       role, or a deterministic reversibility design (draft-not-send, soft delete with a recovery
       window, a hold queue a named person releases). The approval surface shows the deterministic
-      tool arguments (recipient, amount, record id), not the model's description, and approvals per
+      tool arguments (recipient, amount, record id) and the acting principal on whose behalf the
+      action runs, not the model's description, and approvals per
       hour and reversals after approval are measured: an approval step that is approved more than it
       is read is not a control. A prompt instruction or a keyword audit is not one of the options.
 - [ ] For a hosted agent loop, the door is the agent's configuration file (pinned model, tool and
@@ -348,14 +373,17 @@ Layers, applied in this order; each catches what the previous cannot:
 
 ### 3.7 Observe
 
-- [ ] Every call logs: timestamp, call site, session or trace id, parent call id for an agent step,
+- [ ] Every call logs: timestamp, call site, acting principal as an opaque id where the call runs
+      for more than one, session or trace id, parent call id for an agent step,
       requested and served model id, effort, duration, input, output, and cached-read tokens, stop
       reason, whether external text was read (`read_external`), outcome class, prompt-template hash,
       output hash. Outcome classes, exactly one per call: `ok`, `parse_failure`, `api_error`,
       `timeout` (the transport's time limit elapsed), `refused`, `rate_limited`, `truncated`,
       `cap_hit` (a door-enforced budget reached), `cancelled` (stopped by an external decision before
       completion: operator, scheduler, consumer gone, batch window expired).
-- [ ] Liveness is derived from real successful calls, never from a heartbeat artifact. For
+- [ ] Liveness is derived from real successful calls, never from a heartbeat artifact; for a
+      scheduled artifact produced per principal it is derived per principal, since a green call site
+      can be failing one tenant. For
       request-response and conversational shapes at Service scale, a scheduled canary call through
       the door against a synthetic principal with its own records, counted separately from user
       traffic, caps, and the content sample, is the real call.
@@ -364,16 +392,17 @@ Layers, applied in this order; each catches what the previous cannot:
 - [ ] Every model-produced artifact shows its age wherever it is read, says whether a model produced
       it, a default was served, or the last good one is being shown, and, where it rests on retrieved
       evidence, shows the oldest evidence date beside its own.
-- [ ] Output is counted, not only runs. A run that produced nothing is visible; defaults served are
-      counted.
+- [ ] Output is counted, not only runs. A run that produced nothing is visible; defaults and
+      last-good artifacts served are counted, per principal where the call runs for more than one.
 - [ ] Drift is detected and surfaced: a prompt-template hash that changed without a linked change,
       and an outcome-class or output-field distribution over the last N runs that differs from the
       first two weeks of production by more than a stated amount. Fixtures are for tests, not for
       baselines.
 - [ ] Where the consumer is not the operator, a named person who is not the approver reads a
       content sample at a stated cadence (daily where the reader is a third party or the output can
-      commit, disclose, or move anything): drawn at random by code across the period, including the
-      outputs the audit held or the agent discarded, sized so that the harm floor's rate would appear
+      commit, disclose, or move anything): drawn at random by code from everything consumers
+      received over the period (model outputs, defaults, and last-good artifacts served), including
+      the outputs the audit held or the agent discarded, sized so that the harm floor's rate would appear
       in the sample within a week, read where the data already lives under its access control, each
       read logged, a period without a read alerting like a liveness failure. Every finding has a
       path: an incident pin, a validator, or the harm-floor count.
@@ -382,8 +411,8 @@ Layers, applied in this order; each catches what the previous cannot:
 
 - [ ] No test calls the live model. Fixtures are recorded from real outputs, failures included.
 - [ ] Fixtures and stored transcripts are redacted or synthesised before commit; nothing personal
-      enters the repository; a guard test scans the fixtures directory for secrets and personal-data
-      patterns.
+      enters the repository; a guard test scans the fixtures directory and the panel reports
+      directory for secrets and personal-data patterns.
 - [ ] Fixtures include recorded injection attempts, and the fence and the tool server are tested
       against them.
 - [ ] Each regression test's description (docstring, doc comment, or test name) opens with the dated
@@ -441,7 +470,9 @@ Summarized here; the full protocol is `panel-protocol.md`.
 - [ ] Verdicts are one of BLOCKERS, MODIFY-BEFORE-BUILD, APPROVE-AS-IS. Any blocker blocks.
       Modifications are folded in before the user sees the artifact.
 - [ ] A load-bearing finding that names a file and a line is verified there; a judgment finding is
-      reproduced in a fresh session; a blocker that does not reproduce is demoted.
+      reproduced in a fresh session; a blocker that does not reproduce is demoted. At Service scale
+      and above, refuting or demoting a blocker is recorded by a second person who is not the
+      author, as a moved TBD date is.
 - [ ] If every reviewer approves and nothing new surfaced on a change to decision logic, a prompt,
       or an irreversible action, the panel is re-run once with sharper "push on" instructions; a
       second clean approve is recorded with both push-on lists attached.
@@ -451,8 +482,9 @@ Summarized here; the full protocol is `panel-protocol.md`.
       sessions were dispatched so a dispatched panel can be told from an inline one.
 
 The code rules in 3.5 to 3.8 are enforced by tests. The process rules here are enforced by a check
-in CI on any change touching a registered call site or a contract (a panel report is linked, no read
-date has expired), not by the agent's instructions file, which by P3 is a request. Until the check
+in CI on any change touching a registered call site or a contract (a panel report is linked and its
+verdict line, parsed by the check, is present and not BLOCKERS; no read date has expired), not by the
+agent's instructions file, which by P3 is a request. Until the check
 exists the project scores at most Review level 2 on the ladder, whatever the file says.
 
 ### 3.11 Developer workflow with agents
@@ -500,12 +532,12 @@ anywhere at Service scale is a known risk.
 | Inputs | Model asked for facts | Facts injected sometimes | All facts injected, stated policy | Closed vocabularies and evidence scoped to the principal; entity presence; snapshot consistency |
 | Validators | Prompt instructions only | Schema validation | Vocabulary and numeric copy checks | Audit biased by cost asymmetry; suppression; structural ceiling stated |
 | Actions | Model acts unbounded | Tool allowlist | Tool server validates writes against the principal | Bounds per action, principal, and day; approval or reversibility for irreversible actions; sandbox and egress allowlist |
-| Failure handling | Silent fallback | Errors logged | Hard-fail at transport, per-site policy named | Bounded retries with idempotency keys; TTL semantics or a visible default; caps with `cap_hit` |
+| Failure handling | Silent fallback | Errors logged | Hard-fail at transport, per-site policy named | Bounded retries with idempotency keys; TTL semantics or a visible default; caps with `cap_hit`; stores and defaults keyed per principal where the call runs for more than one |
 | Budget | Cost unknown | Cost known | Frequency conditioned; latency measured; timeouts from p95 | Cache layout and hit rate tracked; scheduler with priority; trials with revert |
-| Observability | Nothing | Success counter | Per-call log with outcome classes | Liveness from real calls; staleness surfaces; drift detection; content sample where the consumer is not the operator |
+| Observability | Nothing | Success counter | Per-call log with outcome classes | Liveness from real calls; staleness surfaces; drift detection; failures and defaults counted per principal where the call runs for more than one; content sample where the consumer is not the operator |
 | Testing | Live model in tests | Recorded fixtures | Incident-pinned regressions; redacted fixtures | Guard tests with failing fixtures; adversarial fixtures; opt-in live smoke |
 | Evaluation | Never asked | Anecdotal | Metric and read date | Dev and golden sets; control; kill criterion and harm floor; consumption check; removals recorded |
-| Review | Author only | Author self-review | Independent reviewers at one gate | Scoped panel at three gates; frame inversion; verified or reproduced verdicts; verdict link required by CI |
+| Review | Author only | Author self-review | Independent reviewers at one gate | Scoped panel at three gates; frame inversion; verified or reproduced verdicts; verdict line parsed by CI |
 
 ---
 
@@ -513,9 +545,7 @@ anywhere at Service scale is a known risk.
 
 The short form; `ADAPTING.md` has the full guide and the time budget. In this order:
 
-1. **Run `adopt.sh <project>`**, which copies these documents in and puts `agent-rules.md` into the
-   project's agent instructions file between two markers, so every future session works under the
-   rules and a refresh updates them in place. Fill in `LOCAL.md`: scale, shapes, roster.
+1. **Install** (above), then fill in `LOCAL.md`: scale, shapes, roster.
 2. **Build or audit the door** (`ADAPTING.md` section 3; section 3.1 if the project already calls a
    model). One package (for example `llm/`) with a transport, a `complete()` entry point and a
    `run()` entry point for loops, a call-site registry with pinned model snapshots, and a call log
@@ -532,16 +562,15 @@ The short form; `ADAPTING.md` has the full guide and the time budget. In this or
 6. **Set the first read date.** Metric, control, dev and golden sets, kill criterion, and harm floor
    for the first feature, written where the review will find them.
 
-The pull-request checklist for any change touching a model call is `ADAPTING.md` section 2.1.
-
 ---
 
 ## Provenance and limits
 
 Distilled from five months of running model-driven features in a live decision-support system: its
 code, its design specs, and the incident record kept alongside them. The generic wording here
-deliberately drops the domain and the incidents. Most rules trace to a specific incident or
-measurement there. The rules added since (agentic calls, the TBD convention, audit bias by cost
+deliberately drops the domain and the incidents. The rules of the first revision (injected facts,
+closed vocabularies, the validator layers, one door, failure policies, the log record, caching,
+review) trace to specific incidents or measurements there. The rules added since (agentic calls, the TBD convention, audit bias by cost
 asymmetry, and the 2026 additions on model lifecycle, caching, structured outputs, context,
 principal scope, harm floors, and data handling) came from adoption feedback and from this
 framework's own panel reviews, whose reports are in `docs/reviews/`; they are reasoned, and they
@@ -556,10 +585,17 @@ a person or passes a recall-biased check. Scrubbing and fencing are hygiene, not
 real-time surface to a third party (voice, live chat without buffering) cannot pass layers 1 to 5
 before the person receives the output; the framework does not cover it, and the options are a person
 who speaks from a draft, or code-rendered templates where the model chooses only among templates.
-The agent-workflow rules (3.11) govern agents that build this project; a product that is itself a
-coding agent needs
-its own branch-state and approval rules in `LOCAL.md`, and its pull-request review is an approval
-step only if the approver is not the person who issued the instruction.
+The ceiling bounds the model; the code around the call (failure policies, caches, last-good stores,
+logs) can disclose on its own, and the per-principal rules in 3.4, 3.5, and 3.7 are the only ones
+here that address it. The content sample is a human-review processing activity; where customer
+agreements, residency terms, or a no-human-review commitment forbid it, the harm floor cannot be
+measured by sampling, only the deterministic checks remain, and the contract says so. The panel's
+own calls go to a vendor under the reviewer command's account, recorded in `LOCAL.md` (protocol
+section 9); the generic runner's allowlist bounds environment variables, not the files under HOME
+that the command's own configuration may read. The agent-workflow rules (3.11) govern agents that
+build this project; a product that is itself a coding agent needs its own branch-state and approval
+rules in `LOCAL.md`, and its pull-request review is an approval step only if the approver is not the
+person who issued the instruction.
 
 ## License
 

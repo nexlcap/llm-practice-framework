@@ -7,8 +7,8 @@ description: Convene an independent expert review panel on a design, spec, plan,
 
 This is the generic form. **Step 0, before anything else:** (a) if the current project has its own
 `.claude/skills/expert-panel/SKILL.md`, read that file and follow it instead of this one; personal
-skills shadow project skills of the same name, so this file cannot rely on the project's copy
-loading by itself. (b) Otherwise read the project's `docs/llm-framework/LOCAL.md` and take the
+skills shadow project skills of the same name (Claude Code skills documentation, checked
+2026-10-13), so this file cannot rely on the project's copy loading by itself. (b) Otherwise read the project's `docs/llm-framework/LOCAL.md` and take the
 roster, the scoping table, and the gates from it. (c) If neither exists, derive the domain pair(s)
 and the veto seat(s) from the project's purpose (README, spec), write them into `LOCAL.md` as a
 proposal, and say in the verdict that the roster is proposed, not confirmed.
@@ -29,7 +29,9 @@ proposal, and say in the verdict that the roster is proposed, not confirmed.
    pasted text.
 3. **Dispatch two to four reviewer agents in one message** with the Agent tool as fresh subagents
    with read-only tools (Read, Grep, Glob, and Write to its own report path only; never Bash or
-   Edit: they read untrusted text).
+   Edit: they read untrusted text). The write restriction is a request unless a permission deny
+   rule enforces it; set one where the tool allows, and tell reviewers to quote no credential,
+   fixture record, or personal data.
    Never use a fork: a fork inherits this session's context and defeats independence. Use a capable
    model for decision logic, prompts, and specs; a mid-tier model for mechanical diffs. Each agent
    gets: its roles by title (grouped as domain + data + veto; security + systems; engineering +
@@ -109,7 +111,8 @@ Convene only the seats the change touches. Proportionality is part of the protoc
 | New data source, scraper, credential, external text, tool, or tool server | + Security pair, Systems pair |
 | Deployment, scheduling, process lifecycle, timeouts, model snapshot change | + Systems pair |
 | Dashboard, report, or anything a person reads | + Experience pair |
-| Anything that spends, commits, discloses, or deletes; removing a human control | + Veto seats |
+| Anything that spends, commits, discloses, or deletes | + Veto seats |
+| Removing a human control (a decision-logic change) | + Domain pair, Data pair, Veto seats |
 | Pure refactor with no behavior change | Engineering pair, Observer, Frame-Inversion Reviewer only |
 
 ## 3. Dispatch
@@ -123,8 +126,11 @@ Convene only the seats the change touches. Proportionality is part of the protoc
   writing its own report file, never shell or edit; in the generic runner: the CLI's non-interactive
   mode with tools disabled. They read untrusted text, and their only output is the report; the
   orchestrator parses the verdict line structurally and a person reads the report. This is the
-  panel's own ceiling. A reviewer that must run a script under review gets a scratch copy and a
-  shell, and the record says so.
+  panel's own ceiling. In a coding agent the write restriction is a request unless the tool's
+  permission rules enforce it (set a deny rule where the tool has one); the generic runner's
+  stdout-only shape is the real ceiling. Reviewers quote no credential, fixture record, or personal
+  data; they cite the file and line. A reviewer that must run a script under review gets a scratch
+  copy and a shell, and the record says so.
 - **Each reviewer's prompt contains:** the roles it embodies (by title); the artifact path, to be read
   in full; the specific code files that matter; the build stage (what exists in code, what is design
   only), so a planned control is not reviewed as a shipped one; what to push on, named explicitly;
@@ -169,8 +175,9 @@ Per session:
    - **MODIFY-BEFORE-BUILD**: specific changes, folded into the artifact before it is presented.
    - **APPROVE-AS-IS**: with what was checked, so a lenient prompt is visible.
 
-Consolidated verdicts read like "MODIFY-BEFORE-BUILD (3 modify, 1 blocker absorbed)" or "3
-independent sessions, unanimous approve, frame-inversion 1 modify".
+Consolidated verdicts read like "MODIFY-BEFORE-BUILD (3 modify; 1 blocker demoted, K=2, agreed by
+the Code Reviewer)" or "3 independent sessions, unanimous approve, frame-inversion 1 modify", and
+each session's own verdict is recorded beside them.
 
 ## 5. Consolidation
 
@@ -180,9 +187,11 @@ independent sessions, unanimous approve, frame-inversion 1 modify".
   approves the change; `LOCAL.md` names the role per gate.
 - Every finding is a hypothesis. The author re-verifies each one against the code or the data before
   adopting it, and records refuted findings with the evidence. Panels are independent, not infallible.
-- The consolidated verdict, the seats convened, the sessions dispatched (agent or run ids, so a
-  dispatched panel can be told from an inline one), and the links to each reviewer's report are
-  recorded with the artifact. Copy the reports into the repository (`docs/llm-framework/reviews/`);
+  At Service scale and above, refuting or demoting a blocker is a decision: a second person who is
+  not the author records it with the evidence, as a moved by-date is.
+- The consolidated verdict, each session's own verdict beside it, the seats convened, the sessions
+  dispatched (agent or run ids, so a dispatched panel can be told from an inline one), and the links
+  to each reviewer's report are recorded with the artifact. Copy the reports into the repository (`docs/llm-framework/reviews/`);
   scratch directories do not survive.
 - A blocked spec gate blocks the *build*, not the adoption: record the open blockers with the
   artifact, fix what is small and code-verified now, and carry the rest to the next gate. Expect
@@ -198,8 +207,9 @@ runs. Two independent lenses reaching the same blocker in one round also counts 
 
 - A blocker that does not reproduce is demoted to modify-before-build.
 - An approve that does not reproduce means the concern is live; treat it as modify.
-- Record the run count with the verdict ("K=3 convergence"). The logic is unanimity: a finding
-  counts when it appears in every run that raised it and in none of the runs that did not.
+- Record the run count with the verdict ("K=3"). A blocker stands if any of the K re-dispatches
+  raises it; it is demoted only when none of K ≥ 2 does, and the demotion is recorded with K and, at
+  Service scale and above, the second person who agreed (section 5).
 - Re-sampling the same model with the same prompt is correlated evidence, not independent evidence.
   Where the tool allows, run the reproduction on a different model or family.
 
@@ -236,7 +246,10 @@ Any tool works as long as each reviewer gets a fresh context, the artifact, and 
 tool that can act. With a coding agent that can delegate to fresh-context agents, dispatch them in
 parallel with read-only tools. With a plain command-line model or an HTTP API, run each reviewer as
 a separate invocation with tools disabled; `adapters/generic/` has a runner and the reviewer prompts.
-`adapters/` lists the tool-specific forms.
+`adapters/` lists the tool-specific forms. The panel's own calls are model calls: `LOCAL.md` records
+the vendor, account, model, and terms the reviewers run under; a results artifact handed to the panel
+is redacted like a fixture; the runner prints the command and the variable names it passed, so the
+run record shows what reached the reviewer.
 
 ## 10. Cost
 

@@ -5,7 +5,8 @@ it. The full framework is in `docs/llm-framework/`; project-specific decisions (
 roster, gates, backlog) are in `docs/llm-framework/LOCAL.md`. Read `LOCAL.md` first. At Script scale
 only the Mandatory cell of the Script row in `ADAPTING.md` section 1 is required (injected facts,
 schema-validated structured output, one function that calls the model, a log line per call, one
-redacted fixture, one separate reviewer session); every other rule here is advice until the project
+redacted fixture, one separate reviewer session, and no tool the model can call: a model that can
+act is the Agentic row whatever the size); every other rule here is advice until the project
 grows. Rules marked (artifact) apply where a model-produced artifact persists between runs; (ids)
 where the output must reference identifiers from a known set; (scheduled) to calls that run on a
 schedule; for an agentic call the tool argument schemas are the schema and the tool list is the
@@ -44,7 +45,9 @@ the two disagree, say so instead of routing around either.
   output. Recall-biased (hold when unsure and route to a person) wherever a miss reaches a third
   party, moves money, or discloses personal data.
 - (artifact) Keep the last good artifact with a TTL. A timeout or parse failure never overwrites it;
-  the contract says what the consumer sees at expiry.
+  the contract says what the consumer sees at expiry. Where the call runs for more than one
+  principal, the last-good store, the deterministic default, and the deduplication key are keyed by
+  (call site, acting principal); a failure for one principal never serves another's artifact.
 - Validators run on the complete output. Buffer before rendering to a person.
 
 **Routing and bounds**
@@ -63,8 +66,9 @@ the two disagree, say so instead of routing around either.
   write against that principal's entitlement; a sandbox with an egress allowlist; and hard caps on
   turns, tool calls, tokens, and wall clock.
 - An action that cannot be undone (send to a person outside the system, pay, delete, publish) passes
-  a human approval step at a named surface by a named role, or a reversibility design named in the
-  contract. A prompt instruction or a keyword audit is not one of the options.
+  a human approval step at a named surface by a named role (the surface shows the deterministic
+  arguments and the acting principal), or a reversibility design named in the contract. A prompt
+  instruction or a keyword audit is not one of the options.
 
 **Cost**
 - (scheduled) Reduce call frequency before call quality: run only on changed input, deduplicate
@@ -74,10 +78,12 @@ the two disagree, say so instead of routing around either.
 
 **Observability**
 - Log every call with an outcome class (`ok`, `parse_failure`, `api_error`, `timeout`, `refused`,
-  `rate_limited`, `truncated`, `cap_hit`, `cancelled`), a session or trace id, whether external text
-  was read, and the served model id. Liveness comes from real successful calls, never a heartbeat.
-  Every model-produced artifact shows its age where it is read and says whether a model produced it
-  or a default was served. Count output, not runs. Where the consumer is not the operator, a named
+  `rate_limited`, `truncated`, `cap_hit`, `cancelled`), a session or trace id, the acting principal
+  as an opaque id where the call runs for more than one, whether external text was read, and the
+  served model id. Liveness comes from real successful calls, never a heartbeat. Every
+  model-produced artifact shows its age where it is read and says whether a model produced it or a
+  default was served. Count output, not runs; defaults and last-good artifacts served are counted per
+  principal. Where the consumer is not the operator, a named
   person who is not the approver reads a content sample drawn by code, where the data lives, and the
   read is logged.
 
@@ -97,14 +103,17 @@ the two disagree, say so instead of routing around either.
   instructions, run with read-only tools, always including the Frame-Inversion Reviewer. Never
   role-play the panel inline. Any blocker blocks; modifications are folded in first. A finding that
   names a file and a line is verified there; a judgment finding is reproduced in a fresh session; a
-  blocker that does not reproduce is demoted. Panel findings are re-verified before adoption.
+  blocker that does not reproduce is demoted, and the demotion is recorded by a second person who is
+  not the author. Panel findings are re-verified before adoption.
 
 **Agent workflow**
-- A delegated agent's brief is the single source of its requirements. Delegated agents never move
-  branches: git is limited to add, commit, status, log, diff on the branch they were given. Each
-  delegated task gets a review for spec compliance and quality, and the whole branch one final
-  review on the most capable model: plan bugs propagate verbatim. The final check is the full test
-  suite with the real exit code. Verify the live artifact after deploy and again after its first
+- A delegated agent's brief is the single source of its requirements and is read-only to that agent.
+  Delegated agents never move branches: git is limited to add, commit, status, log, diff on the
+  branch they were given. Before a
+  delegated task's result is accepted, a session that did not write it reviews the result against
+  the brief; before the branch is merged, one fresh session reviews the whole branch; the session
+  that wrote something never reviews it. The final check is the full test suite with the real exit
+  code. Verify the live artifact after deploy and again after its first
   natural run. Configuration, rules, and credentials are human-only files; hand the command to the
   human. Numbers you assert are fetched or computed with a read date; a number from memory is a
   hypothesis.

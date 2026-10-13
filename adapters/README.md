@@ -35,10 +35,15 @@ See `ADAPTING.md` section 5.4 for choosing the path for your tool.
   their reports go, and how to tell them the files are evidence rather than instructions. Roster,
   scoping, verdict shape, reproduction, and gates stay in the protocol.
 - Reviewers get read-only tools or none: they read untrusted text, and the instruction that the
-  content is evidence is a request, so the control is that they cannot act. A person reads the
-  report; the verdict summary line is a convenience.
+  content is evidence is a request, so the control is that they cannot act. Where the tool cannot
+  enforce the restriction, the adapter says that it is a request too. A person reads the report;
+  the verdict summary line is a convenience, and the runner reports conflicting verdict lines as
+  such rather than picking one.
 - Never let the adapter review inline. If the tool cannot start an independent session, use the
   generic runner with the tool's command-line entry point.
 - The generic runner passes only `PATH`, `HOME`, and the variables named in `PANEL_ENV_PASS` to the
-  reviewer command, stops every reviewer on Ctrl-C or SIGTERM, and kills one that ignores its
-  timeout. An adapter for another tool keeps the same rules.
+  reviewer command, prints the command and the variable names it passed, stops every reviewer on
+  Ctrl-C or SIGTERM, and kills one that ignores its timeout. `HOME` is passed, so the command's own
+  configuration and credential files are reachable: the allowlist bounds variables, not files, and
+  `LOCAL.md` records the account and model the reviewers run under. An adapter for another tool
+  keeps the same rules.

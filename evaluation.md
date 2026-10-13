@@ -23,7 +23,7 @@ permanent by default, whether or not it works.
 
 **Kill criterion.** `<the number below which the feature is removed or reduced, decided now>`
 
-**Harm floor.** `<the named harmful outcome (disclosure to the wrong party, unauthorised action, false commitment); the rate above which the feature is paused regardless of the primary metric; measured on a sample of <n> per <period> drawn at random by code, including held and discarded outputs, read by <role>; n chosen so that a rate of <p> would be seen with 95 % probability within the period (n = ln(0.05) / ln(1 - p)); rates below what the sample can see are caught by <deterministic check>>` or `n/a(reason: the reader is the operator and the output is recoverable)`
+**Harm floor.** `<the named harmful outcome (disclosure to the wrong party, unauthorised action, false commitment); the rate above which the feature is paused regardless of the primary metric; measured on a sample of <n> per <period> drawn at random by code, including held and discarded outputs, read by <role>; n chosen so that a rate of <p> would be seen with 95 % probability within the period (n = ln(0.05) / ln(1 - p)); rates below what the sample can see are caught by <deterministic check>>` or `n/a(reason: the reader is the operator and a wrong output is corrected before anything acts on it; say by whom)`
 
 **Control retention.** `<which human control remains after a positive read; what evidence would justify removing it; removing it is a decision-logic change that convenes the veto seats>`
 

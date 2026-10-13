@@ -7,8 +7,8 @@ description: Convene an independent expert review panel on a design, spec, plan,
 
 This is the generic form. **Step 0, before anything else:** (a) if the current project has its own
 `.claude/skills/expert-panel/SKILL.md`, read that file and follow it instead of this one; personal
-skills shadow project skills of the same name, so this file cannot rely on the project's copy
-loading by itself. (b) Otherwise read the project's `docs/llm-framework/LOCAL.md` and take the
+skills shadow project skills of the same name (Claude Code skills documentation, checked
+2026-10-13), so this file cannot rely on the project's copy loading by itself. (b) Otherwise read the project's `docs/llm-framework/LOCAL.md` and take the
 roster, the scoping table, and the gates from it. (c) If neither exists, derive the domain pair(s)
 and the veto seat(s) from the project's purpose (README, spec), write them into `LOCAL.md` as a
 proposal, and say in the verdict that the roster is proposed, not confirmed.
@@ -29,7 +29,9 @@ proposal, and say in the verdict that the roster is proposed, not confirmed.
    pasted text.
 3. **Dispatch two to four reviewer agents in one message** with the Agent tool as fresh subagents
    with read-only tools (Read, Grep, Glob, and Write to its own report path only; never Bash or
-   Edit: they read untrusted text).
+   Edit: they read untrusted text). The write restriction is a request unless a permission deny
+   rule enforces it; set one where the tool allows, and tell reviewers to quote no credential,
+   fixture record, or personal data.
    Never use a fork: a fork inherits this session's context and defeats independence. Use a capable
    model for decision logic, prompts, and specs; a mid-tier model for mechanical diffs. Each agent
    gets: its roles by title (grouped as domain + data + veto; security + systems; engineering +

@@ -34,7 +34,7 @@ runs once per file.
 |---|---|
 | Any change | Observer, Frame-Inversion Reviewer, Engineering pair |
 | `<your change type>` | + `<seats>` |
-| Removing a human control | + Domain pair, Veto seats |
+| Removing a human control (a decision-logic change) | + Domain pair, Data pair, Veto seats |
 | A data source a contract lists changed (schema, filter, access rule) | re-opens that contract's spec gate |
 | Pure refactor | Engineering pair, Observer, Frame-Inversion Reviewer |
 
@@ -44,7 +44,8 @@ runs once per file.
 - Spec gate: `<where it happens; where the verdict is attached>`; "the user" is `<role>`
 - Results gate: `<where it happens; read date>`; "the user" is `<role>`
 - Execution path: `<adapter | generic runner with .panel.env | separate chats>`
-- CI check that a panel report is linked: `<job name | planned(by date)>`
+- CI check that a panel report is linked and its verdict line parsed (present, not BLOCKERS): `<job name | planned(by date)>`
+- Who records a refuted or demoted blocker, other than the author: `<role>`
 
 ## Door audit (ADAPTING.md section 3)
 
@@ -61,10 +62,14 @@ runs once per file.
 
 ## Project-level controls referenced by every contract
 
+(`call-site-contract.md` section 11 names the data classes and terms; `ADAPTING.md` section 6 the
+guard tests and the content sample.)
+
 - Vendor terms relied on: `<retention, training opt-out, zero-data-retention, region, agreement, checked on <date>>`
 - Sandbox for agentic calls: `<filesystem scope; egress allowlist; no credential in the model process>`
-- Guard tests: `<one-door, inventory, secrets-and-personal-data in logs and fixtures, pinned-model>`
+- Guard tests: `<one-door, inventory, secrets-and-personal-data in logs, fixtures, and reviews/, pinned-model>`
 - Content sample readers and access: `<role, where they read, how reads are logged>`
+- Panel reviewers run under: `<vendor, account, model, terms; what a results artifact is redacted to before the panel sees it>`
 
 ## Rules added or dropped for this project
 
@@ -83,5 +88,5 @@ if two quarters of design-gate verdicts were approve>`.
 
 ## Review log
 
-| Date | Artifact | Seats | Verdict | Reports |
-|---|---|---|---|---|
+| Date | Artifact | Seats | Per-seat verdicts | Consolidated verdict | Reports |
+|---|---|---|---|---|---|

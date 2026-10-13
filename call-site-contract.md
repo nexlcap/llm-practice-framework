@@ -35,7 +35,7 @@ Copy from the line below.
 
 - Event that runs it: `<event, request, user turn, or scheduled window>`
 - Delta condition (runs only if) `[scheduled artifact]`: `<what must have changed since the last run>`
-- Deduplication key: `<what makes two runs the same run>`; idempotency key carried by any
+- Deduplication key: `<what makes two runs the same run; includes the acting principal where the call runs for more than one>`; idempotency key carried by any
   side-effecting call: `<minted by the door per logical operation; identical across retries; never an attempt counter or a timestamp>`
 - Expected cadence: `<n per day, or n per user per hour>`; maximum, enforced in the door: `<n>`
 
@@ -49,9 +49,9 @@ Copy from the line below.
 
 **Data sources read by code for this call** (a change to any of them re-opens the spec gate):
 
-| Source | Filter applied | Owner |
-|---|---|---|
-| `<table, index, API>` | `<the consumer's entitlement, applied by <function>>` | `<team>` |
+| Source | Filter applied | Visible to the reader | Owner |
+|---|---|---|---|
+| `<table, index, API>` | `<the consumer's entitlement, applied by <function>>` | `<yes, or no: operator-internal, held by the audit if quoted>` | `<team>` |
 
 **Closed vocabularies** (the output may reference no other identifiers):
 
@@ -129,27 +129,32 @@ ratchet test: <test name>>`
 ### 7. Failure policy
 
 - Transport error / timeout: `<skip loudly | deterministic default <what> | keep last good (TTL <h>) | abort>`
-- A deterministic default is labelled as a default where it is read and counted as `default_served`;
-  the consumer can always tell it from a model answer: `<how>`
+- A deterministic default is labelled as a default where it is read and counted as `default_served`,
+  per principal where the call runs for more than one; the consumer can always tell it from a model
+  answer: `<how>`
 - Rate limit or 5xx: retry `<none | n attempts, backoff with jitter, Retry-After honoured, inside
   the total timeout, each attempt logged>`, then the policy above
 - Parse failure or truncation: `<same or different>`
 - Empty or fully-rejected output: `<what the consumer sees>`
 - Cap hit (`cap_hit`): `<what happens>`
-- Last-good artifact `[scheduled artifact]`: location and TTL `<path or table>, <h>`; at expiry the
-  consumer sees `<...>`; a system consumer treats it as absent: yes; cleared by `<code path>`
+- Last-good artifact `[scheduled artifact]`: location and TTL `<path or table>, <h>`, keyed by (call
+  site, acting principal) where the call runs for more than one; at expiry the consumer sees
+  `<...>`; a system consumer treats it as absent: yes; cleared by `<code path>`
 - Committed tool actions when a session aborts `[agentic]`: `<stay | compensated by <action> | require a person>`, per tool
 
 ### 8. Observability
 
-- Log record fields beyond the standard set: `<extra fields>`
+- Log record fields beyond the standard set: `<extra fields>`; acting principal recorded as `<opaque
+  id field, or n/a(one principal: the operator)>`
 - Session or trace id: `<field>`; one event row per tool call `[agentic]`: `<table>`
 - Staleness surface ("as of", "produced by a model | default served | last good shown", and the
   oldest evidence date, shown at): `<page, field, or endpoint>`
-- Liveness derived from: `<this call's successful runs, window <h> | a scheduled canary call through
-  the door against a synthetic principal, window <h>>`
-- Content sample: `<n outputs per <period>, drawn at random by <code path> across the period and
-  stratified by <queue or hour>, including the outputs held or discarded; read by <role>, who is not
+- Liveness derived from: `<this call's successful runs, window <h>, per principal for a scheduled
+  artifact produced per principal | a scheduled canary call through the door against a synthetic
+  principal, window <h>>`
+- Content sample: `<n items per <period>, drawn at random by <code path> from what consumers received
+  (model outputs, defaults, and last-good artifacts served), stratified by <queue or hour>, including
+  the outputs held or discarded; read by <role>, who is not
   the approver, through <the source system's own surface, under its access control>; each read
   logged, a period without a read alerts; looking for <named outcomes>; findings go to <incident pin
   | validator | harm-floor count>; sample copies are not kept beyond the finding>` or
@@ -164,7 +169,10 @@ ratchet test: <test name>>`
   attempts: yes; redacted by `<function>`: yes)
 - Incident-pinned regressions: `<test name → incident date and one line>`
 - Guard tests touching this site: `<inventory, one-door, secrets-in-logs-and-fixtures, pinned-model>`
-- Entitlement test: `<a fixture record owned by another principal is never shown or emitted>`
+- Entitlement test: `<a fixture record owned by another principal is never shown, emitted, or served,
+  including by the failure policy: a failure for principal A after a success for principal B serves A
+  nothing of B's>`; principal binding test: `<a request authenticated as A cannot be bound to B,
+  through the production entry point>`
 - Live smoke: `<opt-in flag>`, off by default
 
 ### 10. Evaluation
@@ -177,17 +185,18 @@ ratchet test: <test name>>`
 - Secrets in prompt, logs, or fixtures: `<none, verified by guard test <name> on <date> | list, remediation by <date>>`
 - Injection surface: `<fields carrying external text, tool results, tool definitions, and their fence>`; ceiling if the fence fails: see section 3
 - Acting principal: `<the consumer in section 1 | a service identity acting for <consumer>, with
-  reads and evidence narrowed to that consumer's entitlement by <function>, tested by <test>>`; bound
-  by `<code path>` at session start from the authenticated request (a session-scoped credential or
-  principal id the tool server receives from the door), never a tool argument the model fills; a
-  service identity's own scope is never the answer
+  reads and evidence narrowed to that consumer's entitlement by <function>>`; bound by `<code path>`
+  at session start from the authenticated request (a session-scoped credential or principal id the
+  tool server receives from the door), never a tool argument the model fills, and inherited by any
+  sub-agent from the door; binding test: `<name, section 9>`; a service identity's own scope is
+  never the answer
 - Tools available to the model `[agentic]`: `<none | allowlist>`; tool servers mounted: `<name and
   the hash of its pinned tool list for servers we control; version with review per bump for
   third-party servers>`
 - Reads the model can cause `[agentic]`: `<none | tools, and the entitlement each is limited to>`
 - Writes the model can cause `[agentic]`: `<none | via tool server, validated by <function>>`
 - Irreversible actions reachable through tools `[agentic]`: `<none | list>`; approval: `<human
-  approval at <surface> by <role>, the surface showing the deterministic tool arguments | reversible
+  approval at <surface> by <role>, the surface showing the deterministic tool arguments and the acting principal | reversible
   by <mechanism, window>, released by <role>>`; approvals per hour and reversals after approval are
   counted in the evaluation
 - Sandbox `[agentic]`: `<filesystem scope; network-egress allowlist; the model process holds no credential>`
@@ -255,15 +264,20 @@ artifact, committed tool actions, event rows, tools, reads, writes, irreversible
   content sample n/a(the reader is the operator; the queue owner sees every misroute).
 - **Tests:** 40 recorded tickets, names and emails redacted, including 6 malformed outputs and 3
   injection attempts; regression "2026-08-12 invented queue 'Billing-EU'"; inventory test lists
-  `ticket-triage`; entitlement test n/a(no per-customer reads: one ticket in, one queue out).
+  `ticket-triage`; entitlement test: the CRM tier read is keyed by the ticket's customer id, and a
+  fixture tier record for another customer is never read or shown.
 - **Evaluation:** `evaluations/ticket-triage.md`: metric = agreement with a blind label; dev set 200
   tickets for prompt iteration; golden set 300 tickets labelled before launch and refreshed with 50
   blind labels a month by a reviewer who does not see the model's queue; control = keyword map
-  alone; read date 2026-11-30; kill if agreement is not at least 10 points above the map; harm floor
-  n/a(a misroute is recoverable).
+  alone; read date 2026-11-30; kill if agreement is not at least 10 points above the map; harm floor:
+  an urgent ticket (tier A or a stated outage) routed out of the urgent queue, above 1 % of urgent
+  tickets in a week, measured from the queue owners' reassignments (deterministic, not a sample),
+  pauses the feature.
 - **Security and data:** no secrets (guard test `test_no_secrets_in_logs_or_fixtures`, 2026-09-01);
-  no tools; no writes; acting principal: the operator's routing service, reading one ticket at a
-  time, no cross-customer evidence; personal data in prompts (names in ticket text) under the vendor
+  no tools; no writes; acting principal: the operator, whose support staff are entitled to every
+  ticket; the routing service runs under that entitlement, one ticket at a time, and stands in for
+  the principal only because the consumer is the operator (`ADAPTING.md` section 8 names the mistake
+  of doing this where the consumer is not); personal data in prompts (names in ticket text) under the vendor
   zero-data-retention agreement recorded in LOCAL.md; fixtures redacted; no transcripts kept.
 
 ## Worked example: an agentic call (abridged: Owner, Created, Priority, and the Review table are omitted)
@@ -283,7 +297,8 @@ recall-biased audit and the content sample planned(by 2026-11-15).
 - **Injected facts:** customer tier and open tickets (from the CRM, at session start, as of that
   moment); ticket text and history through read tools, live at read time (the server retrieves, the
   model judges). **Data sources read by code:** the tickets and CRM tables, filtered to this ticket's
-  customer by the tool server; the knowledge base, public articles only. **Closed vocabularies:**
+  customer by the tool server (internal notes and internal tags are operator-internal, not visible to
+  the customer); the knowledge base, public articles only. **Closed vocabularies:**
   ticket ids, tag names, and escalation queues exist only as tool arguments; the tool server
   validates each against the records this ticket's customer is entitled to, never against the whole
   database. Existence is not entitlement. **Stated policy:** "Draft only from the ticket and the
@@ -305,7 +320,8 @@ recall-biased audit and the content sample planned(by 2026-11-15).
 - **Validators:** (1) tool argument schemas; (2) ids and tags ∈ this customer's records, checked by
   the server; (3) numeric copy: any amount in a draft must equal an amount shown in a tool result for
   this customer; (4) audit, recall-biased: any draft that mentions money, eligibility, or a
-  commitment, or contains a URL, email address, or phone number not in the knowledge base, is held
+  commitment, quotes an internal note or internal tag, or contains a URL, email address, or phone
+  number not in the knowledge base, is held
   for a person with the reason shown; (5) suppression: the caps; (6) structural: no tool sends to
   the customer or moves money (a refund or credit is an `escalate` call with a reason code from a
   closed set of six, acted on by a person); only the support tool server is mounted; built-in tools
@@ -317,7 +333,8 @@ recall-biased audit and the content sample planned(by 2026-11-15).
   reversible by the agent), drafts are discarded, the session is marked aborted with the partial
   transcript, the ticket returns to the human queue; rate limits: 3 retries with backoff inside the
   600 s; no retry of the session.
-- **Observability:** one call record per session with outcome class and session id; one event row
+- **Observability:** one call record per session with outcome class, session id, and the customer's
+  principal id; one event row
   per tool call; the ticket view shows "draft by the assistant at <time>; sent by <agent> at <time>".
   Liveness: completed sessions per hour in business hours, one canary session per hour otherwise
   against a synthetic customer with its own records, excluded from the sample and the caps. Content
@@ -328,8 +345,9 @@ recall-biased audit and the content sample planned(by 2026-11-15).
   findings become incident pins or validators.
 - **Tests:** recorded transcripts, redacted, including an aborted one and three with injected
   instructions in the ticket text; tool server tests for every refusal, including a read of a record
-  owned by another customer and of a record with no owner; a guard test that no code outside the
-  door spawns the model.
+  owned by another customer and of a record with no owner; a binding test that a request
+  authenticated as one customer cannot open a session bound to another; a guard test that no code
+  outside the door spawns the model.
 - **Evaluation:** `evaluations/support_session.md`: metric = share of sampled sent replies a
   reviewer rates correct and within policy (the share not edited by a person measures the reviewer's
   effort, not the reply); dev set 60 recorded sessions; golden set 150 recorded sessions with their
@@ -345,7 +363,7 @@ recall-biased audit and the content sample planned(by 2026-11-15).
   acting principal = this ticket's customer, bound by the door from the ticket's authenticated owner
   at session start and passed to the tool server as a session-scoped principal id, never a tool
   argument; irreversible actions reachable: none (send is a human action at the ticket view, which
-  shows the draft and the recipient); rule of two: untrusted input yes; private data yes; changes
+  shows the draft, the recipient, and the customer on whose behalf the session ran); rule of two: untrusted input yes; private data yes; changes
   state yes (tags, escalations) and communicates externally no (a person sends): three yeses,
   covered by draft-not-send for communication and by reversible tags and a person-acted escalation
   for state; data sent to the vendor: personal (names, ticket text) under the zero-data-retention
