@@ -1,40 +1,51 @@
 # Framework adoption: project-specific decisions
 
 Kept outside the framework files so a refresh cannot clobber it. Fill every section; a reviewer
-reads this file first.
+reads this file first. The source repository and framework version are in `.adopt` beside this file.
 
-## Scale
+## Scale and shapes (ADAPTING.md section 1)
 
-`<script | service | agentic product>` and one sentence on why.
+Scale: `<script | service | agentic product>` and one sentence on why.
+Shapes present: `<scheduled artifact | request-response | conversation | agentic session>`, one line
+per call site.
 
-## Panel roster for this project
+## Instructions files (ADAPTING.md section 2)
+
+`<AGENTS.md | CLAUDE.md | GEMINI.md | .cursor/rules/...>`, one per tool the team uses; `adopt.sh`
+runs once per file.
+
+## Panel roster for this project (ADAPTING.md section 5)
 
 | Seat | Roles |
 |---|---|
 | Domain pair | `<Role A>` ↔ `<Role B>`: `<the tension>` |
 | Second domain pair (if the project has a second question, e.g. a research method) | `<Role C>` ↔ `<Role D>`: `<the tension>` or "none" |
-| Veto seat | `<Role>`: `<the irreversible resource>` (or "none: nothing irreversible", with the reason) |
+| Veto seats, one per irreversible resource | `<Role>`: `<money, personal data, a message sent, or a legal position>`; `<Role>`: `<...>` (or "none: nothing irreversible", with the reason) |
 | Data pair | ML Engineer ↔ Data Engineer |
 | Security pair | Application Security ↔ Web / Content Security |
 | Systems pair | Systems Security ↔ DevOps / Infrastructure |
 | Engineering pair | Software Engineer ↔ Code Reviewer |
-| Experience pair | UX Designer ↔ Data Visualization |
-| Observer, Frame-Inversion | always |
+| Experience pair | UX Designer ↔ `<Data Visualization Specialist for a display of numbers, or Technical Writer for a document>` |
+| Observer, Frame-Inversion Reviewer | always |
 
-## Scoping table
+## Scoping table (panel-protocol.md section 2)
 
 | Change type | Seats |
 |---|---|
-| Any change | Observer, Frame-Inversion, Engineering pair |
+| Any change | Observer, Frame-Inversion Reviewer, Engineering pair |
 | `<your change type>` | + `<seats>` |
-| Pure refactor | Engineering pair, Observer, Frame-Inversion |
+| Removing a human control (a decision-logic change) | + Domain pair, Data pair, Veto seats |
+| A data source a contract lists changed (schema, filter, access rule) | re-opens that contract's spec gate |
+| Pure refactor | Engineering pair, Observer, Frame-Inversion Reviewer |
 
-## Gates
+## Gates (ADAPTING.md section 5.6)
 
-- Design gate: `<where it happens>`
-- Spec gate: `<where it happens; where the verdict is attached>`
-- Results gate: `<where it happens; read date>`
-- Execution path: `<adapter or generic runner or separate chats>`
+- Design gate: `<where it happens>`; "the user" is `<role>`
+- Spec gate: `<where it happens; where the verdict is attached>`; "the user" is `<role>`
+- Results gate: `<where it happens; read date>`; "the user" is `<role>`
+- Execution path: `<adapter | generic runner with .panel.env | separate chats>`
+- CI check that a panel report is linked and its verdict line parsed (present, not BLOCKERS): `<job name | planned(by date)>`
+- Who records a refuted or demoted blocker, other than the author: `<role>`
 
 ## Door audit (ADAPTING.md section 3)
 
@@ -42,17 +53,40 @@ reads this file first.
 |---|---|
 | Only the transport touches the vendor | `<met / not met: how>` |
 | Unknown call sites raise | |
-| Every registered id has a contract | |
-| Transport never falls back | |
+| Every registered id has a contract; structural and calendar checks | |
+| Transport never falls back; retries bounded with idempotency keys | |
 | Environment isolation | |
 | Timeouts measured | |
+| Model ids are fixed snapshots with lifecycle dates; who watches the vendor page: `<role>` | |
 | Log record minimum fields | |
+
+## Project-level controls referenced by every contract
+
+(`call-site-contract.md` section 11 names the data classes and terms; `ADAPTING.md` section 6 the
+guard tests and the content sample.)
+
+- Vendor terms relied on: `<retention, training opt-out, zero-data-retention, region, agreement, checked on <date>>`
+- Sandbox for agentic calls: `<filesystem scope; egress allowlist; no credential in the model process>`
+- Guard tests: `<one-door, inventory, secrets-and-personal-data in logs, fixtures, and reviews/, pinned-model>`
+- Content sample readers and access: `<role, where they read, how reads are logged>`
+- Panel reviewers run under: `<vendor, account, model, terms; what a results artifact is redacted to before the panel sees it>`
+
+## Rules added or dropped for this project
+
+- `<rule, added or dropped, reason, date>`
 
 ## Backlog created by the adoption
 
 - `<gap, owner, by-date>`
 
+## Framework read date (README.md P8, applied to this adoption)
+
+`<YYYY-MM-DD>`. Metrics: contracts whose "last reviewed" is within 180 days; panel findings adopted
+versus refuted per seat; incidents with a pinned test; expired TBDs; content-sample reads logged
+versus scheduled. Kill criteria per practice: `<e.g. drop the design gate for changes under n lines
+if two quarters of design-gate verdicts were approve>`.
+
 ## Review log
 
-| Date | Artifact | Seats | Verdict | Reports |
-|---|---|---|---|---|
+| Date | Artifact | Seats | Per-seat verdicts | Consolidated verdict | Reports |
+|---|---|---|---|---|---|

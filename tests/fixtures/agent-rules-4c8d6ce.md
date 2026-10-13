@@ -1,0 +1,67 @@
+## LLM usage rules
+
+These rules apply to every model call this project makes and to every agent session working on
+it. The full framework is in `docs/llm-framework/`; project-specific decisions (scale, panel
+roster, gates, backlog) are in `docs/llm-framework/LOCAL.md`.
+
+**Design**
+- No model call exists without a call-site contract (`call-site-contract.md`). A blank consumer
+  field means the call is not built.
+- The model never authors facts. Numbers, dates, identifiers, prices, sizes, schedules are computed
+  or retrieved by code and injected into the prompt; the model copies them.
+- Every identifier the model may emit is shown in the prompt as a closed vocabulary and validated
+  against that set on output. Unknown identifiers are dropped, never clipped or repaired.
+- Ask for structured output at generation time. Never mine prose for facts afterwards.
+- State the doctrine in the prompt: what the call is for, what it is not, whose interests it serves.
+- Model output never feeds another model call as fact, and never becomes a control input without a
+  deterministic check in between.
+
+**Guards**
+- A prompt instruction the model "disobeyed" is fixed with a structural guard (schema, vocabulary,
+  numeric copy check, precision-biased audit, suppression, or removing the ability), never with
+  another sentence.
+- A post-hoc guard's bias is chosen from the cost asymmetry of its errors and stated in the
+  contract. Where a false correction of a correct output is costlier than a miss (a trust surface a
+  person reads), it is precision-biased: skip when unsure. Where a false refusal only costs a retry,
+  it need not be.
+- Keep the last good artifact with a TTL. A timeout or parse failure never overwrites it.
+
+**Routing**
+- One client module. All call sites import it. A guard test bans every other route and an inventory
+  test lists every registered call site. An unregistered call site raises.
+- Hard-fail at the transport, degrade at the call site (skip loudly, keep last good, or abort). No
+  silent fallback to another model or route, ever.
+- Clean environment allowlist, isolated config directory, explicit credentials, model whitelist,
+  pinned client version. Secrets never in prompts or logs; log the prompt hash.
+- Agentic calls get an explicit tool allowlist and a tool server that validates every write.
+
+**Cost**
+- Reduce call frequency before call quality: delta-gate on changed input, deduplicate schedules, tie
+  cadence to the consumer. Measure latency before setting any timeout. Trials have criteria and a
+  revert.
+
+**Observability**
+- Log every call with an outcome class (ok, parse failure, API error, timeout, refused,
+  rate-limited). Liveness comes from real successful calls, never a heartbeat. Every model-produced
+  artifact shows its age where it is read. Count output, not runs.
+
+**Testing and evaluation**
+- No test calls the live model. Fixtures are recorded outputs, failures included. Regression test
+  descriptions open with the dated incident they prevent. The live smoke test is opt-in and off by
+  default.
+- Every model feature has a pre-registered metric, control, read date, and kill criterion. "No value"
+  is a normal result; unconsumed output is removed.
+
+**Review**
+- Designs, specs, and results go to the expert panel (`panel-protocol.md`) before the user sees
+  them: separate reviewer sessions by role title, scoped to the change, always including a frame-inversion
+  reviewer. Never role-play the panel inline. Any blocker blocks; modifications are folded in first;
+  load-bearing verdicts are re-run until they reproduce. Panel findings are re-verified before
+  adoption.
+
+**Agent workflow**
+- A delegated agent's brief is the single source of its requirements. Delegated agents never touch
+  branch state.
+  The final gate is the full test suite with the real exit code. Verify the live artifact after
+  deploy and again after its first natural run. Numbers you assert are fetched or computed with a
+  read date; a number from memory is a hypothesis.
