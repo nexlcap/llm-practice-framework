@@ -8,9 +8,13 @@
 #                          conversation context. Run through `bash -c`; quote inside the variable if a
 #                          path contains spaces.
 #        PANEL_ENV_PASS    space-separated names of environment variables the command needs (an API
-#                          key, a config path; often LANG, TERM, TMPDIR, XDG_CONFIG_HOME, HTTPS_PROXY,
-#                          NO_PROXY, SSL_CERT_FILE). Nothing else from this environment reaches it:
-#                          PATH and HOME only. An unset name is passed empty, with a note.
+#                          key, a config path, the variable that selects the model or the profile;
+#                          often LANG, TERM, TMPDIR, XDG_CONFIG_HOME, HTTPS_PROXY, NO_PROXY,
+#                          SSL_CERT_FILE). Nothing else from this environment reaches it: PATH and
+#                          HOME only. HOME is passed, so the command's own configuration and
+#                          credential files are reachable: the allowlist bounds variables, not files.
+#                          An unset name is passed empty, with a note. The command and the names
+#                          passed are printed at the start of the run, for the run record.
 #        PANEL_PROMPTS     directory of reviewer prompt files (default: prompts/ next to this script)
 #        PANEL_SEATS       which prompts to run: space-separated basenames or their leading numbers
 #                          (default: all). The scoping table in panel-protocol.md section 2 says which.
@@ -21,11 +25,16 @@
 #                          the project's roster, copied from LOCAL.md (defaults: the Domain
 #                          Practitioner, the Domain Skeptic, the Irreversible-resource Advisor, none).
 #                          Keep them in a .panel.env beside LOCAL.md and source it before running.
-#        PANEL_TIMEOUT     seconds per reviewer (default 900; enforced where `timeout` or `gtimeout` exists)
+#        PANEL_TIMEOUT     seconds per reviewer, positive (default 900; enforced where `timeout` or `gtimeout` exists)
 #        PANEL_KILL_AFTER  seconds after PANEL_TIMEOUT before a reviewer that ignored SIGTERM is killed (default 30)
 #        PANEL_MAX_BYTES   refuse to run if one reviewer's input exceeds this (default 400000)
-# exit:  0 every reviewer ran; 1 a reviewer failed or timed out; 2 bad input, nothing was run.
-#        Ctrl-C or SIGTERM stops every reviewer (their process groups) before the runner exits.
+#        REPORT_DIR must not already hold reports: one directory per run, so a stale verdict is never
+#        read beside a new one.
+# exit:  0 every reviewer ran and every report has exactly one verdict line; 1 a reviewer failed or
+#        timed out; 2 bad input, nothing was run; 3 every reviewer ran but a report has no verdict
+#        line or conflicting ones (read the report; the summary line is not a verdict).
+#        Ctrl-C or SIGTERM stops every reviewer (each runs in its own process group) before the
+#        runner exits.
 set -euo pipefail
 [ "${BASH_VERSINFO[0]}" -ge 4 ] || { echo "bash 4 or newer required (macOS: brew install bash coreutils)" >&2; exit 2; }
 shopt -u patsub_replacement 2>/dev/null || true
@@ -44,6 +53,7 @@ extra="${PANEL_EXTRA_PAIR:+A second pair, $PANEL_EXTRA_PAIR, reviews the second 
 
 # Pre-flight: everything that can be wrong is found before any model is invoked.
 case "$timeout_s$kill_after$max_bytes" in *[!0-9]*|'') echo "PANEL_TIMEOUT, PANEL_KILL_AFTER and PANEL_MAX_BYTES must be integers" >&2; exit 2;; esac
+[ "$timeout_s" -gt 0 ] && [ "$max_bytes" -gt 0 ] || { echo "PANEL_TIMEOUT and PANEL_MAX_BYTES must be positive integers (0 would disable the bound)" >&2; exit 2; }
 for f in "$@"; do
   [ -f "$f" ] && [ -r "$f" ] || { echo "cannot read artifact or code file: $f" >&2; exit 2; }
 done
@@ -60,12 +70,12 @@ selected=()
 if [ -n "${PANEL_SEATS+x}" ]; then
   set -f; read -r -a seats <<< "$PANEL_SEATS"; set +f
   for seat in ${seats[@]+"${seats[@]}"}; do
-    hits=()
+    hits=(); seat="${seat%.md}"
     for p in "${all[@]}"; do
       name="$(basename "$p" .md)"
       if [ "$seat" = "$name" ] || [ "$seat" = "${name%%-*}" ]; then hits+=("$p"); fi
     done
-    [ ${#hits[@]} -eq 1 ] || { echo "seat '$seat' matches ${#hits[@]} prompts (${hits[*]:-none}); PANEL_SEATS='$PANEL_SEATS' selects no prompt or is ambiguous; name the file" >&2; exit 2; }
+    [ ${#hits[@]} -eq 1 ] || { echo "seat '$seat' matches ${#hits[@]} prompts (${hits[*]:-none}); PANEL_SEATS='$PANEL_SEATS' selects no prompt or is ambiguous; name the prompt file, with or without .md" >&2; exit 2; }
     case " ${selected[*]:-} " in *" ${hits[0]} "*) ;; *) selected+=("${hits[0]}");; esac
   done
   [ ${#selected[@]} -gt 0 ] || { echo "PANEL_SEATS='$PANEL_SEATS' selects no prompt; unset it to run all" >&2; exit 2; }
@@ -77,8 +87,12 @@ if command -v timeout >/dev/null 2>&1; then timeout_cmd=(timeout -k "$kill_after
 elif command -v gtimeout >/dev/null 2>&1; then timeout_cmd=(gtimeout -k "$kill_after" "$timeout_s")
 else echo "note: no timeout command found; PANEL_TIMEOUT is not enforced and a hung reviewer must be stopped by hand" >&2
 fi
+for p in "${selected[@]}"; do [ -r "$p" ] || { echo "cannot read reviewer prompt: $p" >&2; exit 2; }; done
+existing=("$report_dir"/*.md)
+[ ${#existing[@]} -eq 0 ] || { echo "report directory $report_dir is not empty (${#existing[@]} .md files); use a fresh directory per run so a stale verdict is never read beside a new one" >&2; exit 2; }
 nonce="$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')"
 work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
 
 subst() { # replace the four placeholders in one pass; roster values are never scanned again
   local in="$1" out="" head rest key
@@ -119,26 +133,40 @@ mkdir -p -- "$report_dir" || { rm -rf "$work"; exit 2; }
 
 echo "roster: $da ↔ $db; veto: $veto; extra pair: ${PANEL_EXTRA_PAIR:-none}"
 echo "seats: ${names[*]}"
+echo "command: $LLM_REVIEW_CMD"
+echo "env passed: PATH${HOME+ HOME}${PANEL_ENV_PASS:+ $PANEL_ENV_PASS}"
 pids=()
-stop_all() { # SIGTERM each reviewer's process group (timeout leads its own), then SIGKILL the stragglers
+stop_all() { # SIGTERM each reviewer's process group, then SIGKILL the stragglers
   local pid
   for pid in ${pids[@]+"${pids[@]}"}; do kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true; done
   sleep 1
   for pid in ${pids[@]+"${pids[@]}"}; do kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true; done
 }
 trap 'stop_all; rm -rf "$work"; echo "interrupted; reviewers stopped" >&2; exit 130' INT TERM HUP
-trap 'rm -rf "$work"' EXIT
+# job control for the launch loop only: it gives every reviewer its own process group, with or
+# without `timeout`, so a stop reaches the reviewer's children and not only its wrapper
+set -m
 for name in "${names[@]}"; do
   ( exec ${timeout_cmd[@]+"${timeout_cmd[@]}"} env -i PATH="$PATH" ${HOME+HOME="$HOME"} ${envargs[@]+"${envargs[@]}"} \
       bash -c "$LLM_REVIEW_CMD" < "$work/$name.in" > "$report_dir/$name.md" 2> "$report_dir/$name.err" ) &
   pids+=($!)
 done
+set +m
 fail=0
 for pid in "${pids[@]}"; do wait "$pid" || fail=1; done
 echo "reports in $report_dir"
+unverdicted=0
 for name in "${names[@]}"; do
-  v="$(grep -E '^(BLOCKERS|MODIFY-BEFORE-BUILD|APPROVE-AS-IS)[[:space:]]*$' "$report_dir/$name.md" | tail -1 | tr -d '[:space:]' || true)"
-  printf '%s: %s\n' "$report_dir/$name.md" "${v:-NO VERDICT LINE; read the report}"
+  # exactly one distinct token-alone line is a verdict; none, or two different ones (a quote of the
+  # artifact's own verdict line under the reviewer's), is not, and a person reads the report
+  mapfile -t vs < <(grep -E '^(BLOCKERS|MODIFY-BEFORE-BUILD|APPROVE-AS-IS)[[:space:]]*$' "$report_dir/$name.md" 2>/dev/null | sed 's/[[:space:]]*$//' | sort -u)
+  case ${#vs[@]} in
+    0) v="NO VERDICT LINE; read the report"; unverdicted=1;;
+    1) v="${vs[0]}";;
+    *) v="CONFLICTING VERDICT LINES (${vs[*]}); read the report"; unverdicted=1;;
+  esac
+  printf '%s: %s\n' "$report_dir/$name.md" "$v"
 done
-[ "$fail" -eq 0 ] || echo "a reviewer failed or timed out; see the .err files" >&2
-exit "$fail"
+if [ "$fail" -ne 0 ]; then echo "a reviewer failed or timed out; see the .err files" >&2; exit 1; fi
+if [ "$unverdicted" -ne 0 ]; then echo "a report has no usable verdict line; the run is not a passed gate" >&2; exit 3; fi
+exit 0
